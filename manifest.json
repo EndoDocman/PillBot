@@ -1,7 +1,7 @@
 {
   "name": "PillBot Personal",
   "short_name": "PillBot",
-  "start_url": "index.html",
+  "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#f4f7f6",
   "theme_color": "#2563eb",

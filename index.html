@@ -8,217 +8,154 @@
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     <style>
         :root {
-            /* Light Theme Defaults */
-            --bg: #f1f5f9;
-            --card: #ffffff;
-            --text: #1e293b;
-            --subtext: #64748b;
-            --border: #e2e8f0;
-            --blue: #2563eb;
-            --green: #10b981;
-            --red: #ef4444;
-            --yellow-zone: #fef9c3;
-            --orange-zone: #ffedd5;
-            --blue-zone: #dbeafe;
+            --bg: #f1f5f9; --card: #ffffff; --text: #0f172a; --subtext: #475569;
+            --border: #cbd5e1; --blue: #2563eb; --green: #059669; --red: #dc2626;
+            --progress-bg: #e2e8f0; --accent: #eff6ff;
         }
 
         [data-theme="dark"] {
-            --bg: #0f172a;
-            --card: #1e293b;
-            --text: #f8fafc;
-            --subtext: #94a3b8;
-            --border: #334155;
-            --blue: #3b82f6;
-            --green: #22c55e;
-            --red: #f87171;
-            --yellow-zone: #422006;
-            --orange-zone: #431407;
-            --blue-zone: #172554;
+            --bg: #0f172a; --card: #1e293b; --text: #f8fafc; --subtext: #94a3b8;
+            --border: #334155; --blue: #3b82f6; --green: #10b981; --red: #f87171;
+            --progress-bg: #334155; --accent: #1e3a8a;
         }
 
         body {
-            font-family: -apple-system, system-ui, sans-serif;
-            background-color: var(--bg);
-            color: var(--text);
-            margin: 0;
-            padding: 15px;
-            transition: background 0.3s, color 0.3s;
+            font-family: system-ui, -apple-system, sans-serif;
+            background-color: var(--bg); color: var(--text);
+            margin: 0; padding: 15px; transition: background 0.3s;
             -webkit-tap-highlight-color: transparent;
         }
 
-        .container { max-width: 500px; margin: 0 auto; padding-bottom: 80px; }
+        .container { max-width: 500px; margin: 0 auto; }
 
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
+        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        h1 { font-size: 2rem; color: var(--blue); font-weight: 900; margin: 0; }
+
+        .top-nav { display: flex; gap: 8px; }
+        .nav-btn {
+            background: var(--card); border: 2px solid var(--border);
+            color: var(--text); padding: 8px 12px; border-radius: 12px;
+            font-size: 0.9rem; font-weight: 700; display: flex; align-items: center; gap: 5px;
         }
 
-        h1 { font-size: 1.8rem; color: var(--blue); margin: 0; font-weight: 900; }
-
-        .header-actions { display: flex; gap: 10px; }
-
-        .icon-btn {
-            background: var(--card);
-            border: 2px solid var(--border);
-            color: var(--text);
-            padding: 10px;
-            border-radius: 12px;
-            cursor: pointer;
-            font-size: 1.2rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        /* DASHBOARD CARDS */
+        /* MEDICATION CARDS */
         .med-card {
-            background: var(--card);
-            border-radius: 24px;
-            padding: 20px;
-            margin-bottom: 15px;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
-            border: 1px solid var(--border);
-            position: relative;
+            background: var(--card); border-radius: 28px; padding: 25px;
+            margin-bottom: 20px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+            border: 2px solid var(--border);
         }
 
-        .med-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
-        .med-name { font-size: 1.4rem; font-weight: 800; color: var(--blue); }
-        .stock-indicator { font-size: 0.9rem; font-weight: 700; color: var(--subtext); margin-top: 5px; }
+        .med-name { font-size: 1.8rem; font-weight: 900; color: var(--blue); margin-bottom: 5px; }
+        
+        /* FUEL GAUGE (Progress Bar) */
+        .gauge-container { margin: 15px 0; }
+        .gauge-label { display: flex; justify-content: space-between; font-weight: 700; margin-bottom: 5px; font-size: 1rem; }
+        .gauge-bar { height: 14px; background: var(--progress-bg); border-radius: 7px; overflow: hidden; }
+        .gauge-fill { height: 100%; background: var(--green); transition: width 0.5s ease-out; }
+        .low-stock-fill { background: var(--red); }
 
-        .take-btn {
-            background: var(--green);
-            color: white;
-            border: none;
-            width: 100%;
-            padding: 15px;
-            border-radius: 16px;
-            font-size: 1.2rem;
-            font-weight: 800;
-            margin-top: 15px;
-            cursor: pointer;
+        .action-btn {
+            width: 100%; padding: 20px; border-radius: 20px; border: none;
+            font-size: 1.4rem; font-weight: 800; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            transition: 0.2s; margin-top: 10px;
         }
+        .btn-take { background: var(--green); color: white; }
+        .btn-taken { background: var(--accent); color: var(--green); border: 3px solid var(--green); }
+        .btn-edit { background: var(--progress-bg); color: var(--text); font-size: 1rem; padding: 12px; }
 
-        /* FORM STYLING */
+        /* FORM */
         .view { display: none; }
         .view.active { display: block; }
+        .big-label { font-size: 1.3rem; font-weight: 800; color: var(--text); margin-bottom: 10px; display: block; }
+        .help-text { font-size: 1rem; color: var(--subtext); margin-bottom: 15px; display: block; }
 
-        .form-group { margin-bottom: 15px; position: relative; }
-        label { display: block; font-size: 0.85rem; font-weight: 700; color: var(--subtext); text-transform: uppercase; margin-bottom: 8px; }
-        
-        input[type="text"], input[type="number"], select {
-            width: 100%; font-size: 1.2rem; padding: 14px; border: 2px solid var(--border);
-            border-radius: 16px; box-sizing: border-box; background: var(--bg); color: var(--text);
+        input[type="text"], input[type="number"] {
+            width: 100%; font-size: 1.5rem; padding: 18px; border: 3px solid var(--border);
+            border-radius: 18px; background: var(--card); color: var(--text); margin-bottom: 20px;
         }
 
-        .dose-row {
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 15px; border-radius: 18px; margin-bottom: 10px; border: 2px solid var(--border);
+        .dose-box {
+            padding: 18px; border-radius: 20px; margin-bottom: 12px;
+            border: 3px solid var(--border); display: flex; align-items: center; justify-content: space-between;
         }
-        .dose-row.active { border-color: var(--blue); }
-        .morning { background: var(--yellow-zone); }
-        .afternoon { background: var(--orange-zone); }
-        .night { background: var(--blue-zone); }
+        .dose-box.active { border-color: var(--blue); background: var(--accent); }
 
-        /* FLOATING ACTION BUTTON */
-        .fab {
-            position: fixed; bottom: 30px; right: 30px;
-            background: var(--blue); color: white;
-            width: 70px; height: 70px; border-radius: 35px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 2.5rem; border: none; box-shadow: 0 10px 20px rgba(59, 130, 246, 0.4);
-            cursor: pointer; z-index: 100;
-        }
+        .add-btn { background: var(--blue); color: white; margin-top: 30px; }
 
-        /* TOAST */
         #toast {
-            position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%);
-            background: var(--text); color: var(--card);
-            padding: 12px 25px; border-radius: 30px; font-weight: 700;
-            display: none; z-index: 1000; box-shadow: 0 10px 15px rgba(0,0,0,0.2);
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+            background: #1e293b; color: white; padding: 15px 30px;
+            border-radius: 40px; font-weight: 800; display: none; z-index: 2000;
         }
 
-        /* AUTOCOMPLETE */
-        .autocomplete-items {
-            position: absolute; border: 1px solid var(--border); z-index: 99;
-            top: 75px; left: 0; right: 0; background: var(--card); border-radius: 14px;
-            max-height: 150px; overflow-y: auto;
-        }
-        .autocomplete-items div { padding: 12px; cursor: pointer; border-bottom: 1px solid var(--border); }
-
-        #qrcode { background: white; padding: 15px; border-radius: 20px; display: inline-block; margin-top: 15px; }
+        #qrcode { background: white; padding: 15px; border-radius: 20px; display: inline-block; }
     </style>
 </head>
 <body data-theme="light">
 
     <div class="container">
-        <!-- Dashboard View -->
+        <!-- Dashboard -->
         <div id="view-dashboard" class="view active">
             <header>
                 <h1>💊 PillBot</h1>
-                <div class="header-actions">
-                    <button class="icon-btn" onclick="toggleTheme()" title="Toggle Theme">🌓</button>
-                    <button class="icon-btn" onclick="showView('view-qr')" title="Emergency ID">🆔</button>
+                <div class="top-nav">
+                    <button class="nav-btn" onclick="toggleTheme()">🌓 Mode</button>
+                    <button class="nav-btn" onclick="showView('view-qr')">🆔 My ID</button>
                 </div>
             </header>
-            <div id="med-list">
-                <!-- Med cards will appear here -->
-            </div>
-            <button class="fab" onclick="prepareNewMed()">+</button>
+            
+            <div id="med-list"></div>
+
+            <button class="action-btn add-btn" onclick="prepareNewMed()">➕ ADD MEDICINE</button>
         </div>
 
-        <!-- Add/Edit View -->
+        <!-- Add/Edit -->
         <div id="view-edit" class="view">
             <header>
-                <h1 id="form-title">Add Medicine</h1>
-                <button class="icon-btn" onclick="showView('view-dashboard')">✖️</button>
+                <h1 id="form-title">New Medicine</h1>
+                <button class="nav-btn" onclick="showView('view-dashboard')">✖️ Close</button>
             </header>
-            <div class="card">
-                <div class="form-group">
-                    <label>Medicine Name</label>
-                    <input type="text" id="name" placeholder="Start typing..." autocomplete="off">
-                    <div id="autocomplete-list" class="autocomplete-items"></div>
-                </div>
-                <div class="form-group">
-                    <label>Pills in Box</label>
-                    <input type="number" id="stock" placeholder="e.g. 30">
-                </div>
-                <label>Schedule</label>
-                <div id="schedule-container">
-                    <div class="dose-row morning" id="row-m">
-                        <div style="display:flex; align-items:center; gap:10px; font-weight:700;">
-                            <input type="checkbox" id="m" style="width:30px;height:30px" onchange="toggleRow('m','tm')"> ☀️ Morning
-                        </div>
-                        <input type="time" id="tm" style="font-size:1.2rem; display:none" value="08:00">
+            <div class="med-card">
+                <label class="big-label">Medicine Name</label>
+                <span class="help-text">Type the name of your tablet below:</span>
+                <input type="text" id="name" placeholder="e.g. Metformin" autocomplete="off">
+                
+                <label class="big-label">Pills in the Box</label>
+                <span class="help-text">How many pills are in the box right now?</span>
+                <input type="number" id="stock" placeholder="30">
+
+                <label class="big-label">When to take it?</label>
+                <div class="dose-box" id="row-m">
+                    <div style="font-size:1.4rem; font-weight:800; display:flex; align-items:center; gap:10px">
+                        <input type="checkbox" id="m" style="width:30px;height:30px" onchange="hToggle('m','tm')"> Morning
                     </div>
-                    <div class="dose-row afternoon" id="row-a">
-                        <div style="display:flex; align-items:center; gap:10px; font-weight:700;">
-                            <input type="checkbox" id="a" style="width:30px;height:30px" onchange="toggleRow('a','ta')"> 🌤️ Afternoon
-                        </div>
-                        <input type="time" id="ta" style="font-size:1.2rem; display:none" value="13:00">
-                    </div>
-                    <div class="dose-row night" id="row-n">
-                        <div style="display:flex; align-items:center; gap:10px; font-weight:700;">
-                            <input type="checkbox" id="n" style="width:30px;height:30px" onchange="toggleRow('n','tn')"> 🌙 Night
-                        </div>
-                        <input type="time" id="tn" style="font-size:1.2rem; display:none" value="21:00">
-                    </div>
+                    <input type="time" id="tm" style="font-size:1.2rem; display:none" value="08:00">
                 </div>
-                <button class="take-btn" style="background:var(--blue)" onclick="saveMed()">✅ SECURE RECORDS</button>
+                <div class="dose-box" id="row-a">
+                    <div style="font-size:1.4rem; font-weight:800; display:flex; align-items:center; gap:10px">
+                        <input type="checkbox" id="a" style="width:30px;height:30px" onchange="hToggle('a','ta')"> Afternoon
+                    </div>
+                    <input type="time" id="ta" style="font-size:1.2rem; display:none" value="13:00">
+                </div>
+                <div class="dose-box" id="row-n">
+                    <div style="font-size:1.4rem; font-weight:800; display:flex; align-items:center; gap:10px">
+                        <input type="checkbox" id="n" style="width:30px;height:30px" onchange="hToggle('n','tn')"> Night
+                    </div>
+                    <input type="time" id="tn" style="font-size:1.2rem; display:none" value="21:00">
+                </div>
+
+                <button class="action-btn add-btn" onclick="saveMed()">💾 SAVE MEDICINE</button>
             </div>
         </div>
 
-        <!-- Emergency View -->
+        <!-- Emergency -->
         <div id="view-qr" class="view">
-            <header>
-                <h1>🚨 Medical ID</h1>
-                <button class="icon-btn" onclick="showView('view-dashboard')">✖️</button>
-            </header>
-            <div class="card" style="text-align:center">
-                <div id="qr-summary" style="text-align:left; font-size:1.1rem; margin-bottom:15px; border-left:5px solid var(--red); padding-left:15px;"></div>
+            <header><h1>🚨 Medical ID</h1><button class="nav-btn" onclick="showView('view-dashboard')">✖️ Close</button></header>
+            <div class="med-card" style="text-align:center">
+                <div id="qr-summary" style="text-align:left; margin-bottom:20px"></div>
                 <div id="qrcode"></div>
-                <p style="color:var(--red); font-weight:800; margin-top:15px;">SCAN FOR EMERGENCY INFO</p>
+                <p style="color:var(--red); font-weight:900; margin-top:20px">FOR DOCTORS: SCAN TO SEE ALL MEDS</p>
             </div>
         </div>
     </div>
@@ -226,16 +163,18 @@
     <div id="toast"></div>
 
     <script>
-        const COMMON_MEDS = ["Metformin", "Levothyroxine", "Atorvastatin", "Amlodipine", "Lisinopril", "Glimepiride", "Vildagliptin", "Sitagliptin", "Gliclazide", "Telmisartan", "Thyronorm"];
         let currentEditId = null;
-
-        if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+        const dbP = () => new Promise(res => {
+            const req = indexedDB.open('PillBotV3', 1);
+            req.onupgradeneeded = e => e.target.result.createObjectStore('meds', { keyPath: 'id' });
+            req.onsuccess = e => res(e.target.result);
+        });
 
         function toggleTheme() {
-            const body = document.body;
-            const newTheme = body.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
-            body.setAttribute('data-theme', newTheme);
-            localStorage.setItem('pillbot-theme', newTheme);
+            const b = document.body;
+            const t = b.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+            b.setAttribute('data-theme', t);
+            localStorage.setItem('pb-theme', t);
         }
 
         function showView(id) {
@@ -244,7 +183,7 @@
             if(id === 'view-qr') renderQR();
         }
 
-        function toggleRow(c, t) {
+        function hToggle(c, t) {
             const ck = document.getElementById(c).checked;
             document.getElementById(t).style.display = ck ? 'block' : 'none';
             document.getElementById('row-' + c).classList.toggle('active', ck);
@@ -254,137 +193,97 @@
             const t = document.getElementById('toast');
             t.textContent = msg; t.style.display = 'block';
             setTimeout(() => t.style.display = 'none', 3000);
-            if(window.navigator.vibrate) window.navigator.vibrate(50);
-        }
-
-        // AUTOCOMPLETE
-        const nameIn = document.getElementById('name');
-        nameIn.oninput = function() {
-            const val = this.value;
-            const list = document.getElementById('autocomplete-list');
-            list.innerHTML = '';
-            if(!val) return;
-            COMMON_MEDS.forEach(med => {
-                if(med.toLowerCase().startsWith(val.toLowerCase())) {
-                    const d = document.createElement("DIV");
-                    d.textContent = med;
-                    d.onclick = () => { nameIn.value = med; list.innerHTML = ''; };
-                    list.appendChild(d);
-                }
-            });
-        };
-
-        // DATABASE
-        const dbP = () => new Promise(res => {
-            const req = indexedDB.open('PillBotMultiDB', 1);
-            req.onupgradeneeded = e => e.target.result.createObjectStore('meds', { keyPath: 'id' });
-            req.onsuccess = e => res(e.target.result);
-        });
-
-        function prepareNewMed() {
-            currentEditId = null;
-            document.getElementById('form-title').textContent = "Add Medicine";
-            document.getElementById('name').value = '';
-            document.getElementById('stock').value = '';
-            ['m','a','n'].forEach(c => { document.getElementById(c).checked = false; toggleRow(c, 't'+c); });
-            showView('view-edit');
+            if(window.navigator.vibrate) window.navigator.vibrate(40);
         }
 
         async function saveMed() {
             const name = document.getElementById('name').value;
-            if(!name) return showToast("Enter medicine name");
+            if(!name) return showToast("⚠️ Enter Name");
             const med = {
-                id: currentEditId || "ID_" + Date.now(),
-                name: name,
-                stock: parseInt(document.getElementById('stock').value) || 0,
+                id: currentEditId || "M_" + Date.now(),
+                name: name, stock: parseInt(document.getElementById('stock').value) || 0,
+                max: parseInt(document.getElementById('stock').value) || 30, // For gauge
                 m: document.getElementById('m').checked, a: document.getElementById('a').checked, n: document.getElementById('n').checked,
                 tm: document.getElementById('tm').value, ta: document.getElementById('ta').value, tn: document.getElementById('tn').value,
-                ts: new Date().toISOString()
+                lastTaken: null
             };
-            const db = await dbP();
-            await db.transaction('meds','readwrite').objectStore('meds').put(med);
-            showToast("Saved Safely ✅");
-            showView('view-dashboard');
-            renderList();
+            const db = await dbP(); await db.transaction('meds','readwrite').objectStore('meds').put(med);
+            showToast("Saved Safely ✅"); showView('view-dashboard'); renderList();
         }
 
         async function renderList() {
             const db = await dbP();
-            const list = await new Promise(r => {
-                const req = db.transaction('meds').objectStore('meds').getAll();
-                req.onsuccess = () => r(req.result);
-            });
+            const list = await new Promise(r => { const req = db.transaction('meds').objectStore('meds').getAll(); req.onsuccess = () => r(req.result); });
             const container = document.getElementById('med-list');
             container.innerHTML = '';
-            if(list.length === 0) container.innerHTML = '<p style="text-align:center;color:var(--subtext)">No medications yet. Tap + to add.</p>';
+            if(list.length === 0) container.innerHTML = '<p style="text-align:center; padding:40px; font-size:1.2rem">No medicines yet.<br>Tap the blue button below to add one.</p>';
             
             list.forEach(med => {
-                const daily = (med.m?1:0) + (med.a?1:0) + (med.n?1:0);
-                const days = daily > 0 ? Math.floor(med.stock/daily) : "—";
+                const perc = Math.min(100, (med.stock / med.max) * 100);
+                const isLow = med.stock < 5;
                 const div = document.createElement('div');
                 div.className = 'med-card';
                 div.innerHTML = `
-                    <div class="med-header">
-                        <div>
-                            <div class="med-name">${med.name}</div>
-                            <div class="stock-indicator">${med.stock} pills remaining (~${days} days)</div>
+                    <div class="med-name">${med.name}</div>
+                    <div class="gauge-container">
+                        <div class="gauge-label">
+                            <span>Box Fuel</span>
+                            <span>${med.stock} pills left</span>
                         </div>
-                        <button class="icon-btn" onclick="editMed('${med.id}')">⚙️</button>
+                        <div class="gauge-bar"><div class="gauge-fill ${isLow?'low-stock-fill':''}" style="width:${perc}%"></div></div>
                     </div>
-                    <button class="take-btn" onclick="takeDose('${med.id}')">I TOOK MY DOSE</button>
+                    <button class="action-btn btn-take" id="btn-${med.id}" onclick="takeDose('${med.id}')">🍴 I TOOK MY DOSE</button>
+                    <button class="action-btn btn-edit" onclick="editMed('${med.id}')">⚙️ CHANGE SETTINGS</button>
                 `;
                 container.appendChild(div);
             });
         }
 
+        async function takeDose(id) {
+            const db = await dbP(); const tx = db.transaction('meds', 'readwrite'); const store = tx.objectStore('meds');
+            const med = await new Promise(r => { const req = store.get(id); req.onsuccess = () => r(req.result); });
+            if(med.stock > 0) {
+                med.stock -= 1;
+                await store.put(med);
+                const btn = document.getElementById('btn-' + id);
+                btn.textContent = "✅ TAKEN JUST NOW";
+                btn.className = "action-btn btn-taken";
+                if(window.navigator.vibrate) window.navigator.vibrate([30, 50, 30]);
+                setTimeout(renderList, 2000);
+            }
+        }
+
         async function editMed(id) {
             const db = await dbP();
-            const med = await new Promise(r => {
-                const req = db.transaction('meds').objectStore('meds').get(id);
-                req.onsuccess = () => r(req.result);
-            });
+            const med = await new Promise(r => { const req = db.transaction('meds').objectStore('meds').get(id); req.onsuccess = () => r(req.result); });
             currentEditId = id;
-            document.getElementById('form-title').textContent = "Edit Medicine";
             document.getElementById('name').value = med.name;
             document.getElementById('stock').value = med.stock;
             ['m','a','n'].forEach(c => { 
                 document.getElementById(c).checked = med[c]; 
-                document.getElementById('t'+c).value = med['t'+c];
-                toggleRow(c, 't'+c);
+                document.getElementById('t'+c).value = med['t'+c] || '08:00';
+                hToggle(c, 't'+c);
             });
             showView('view-edit');
         }
 
-        async function takeDose(id) {
-            const db = await dbP();
-            const tx = db.transaction('meds', 'readwrite');
-            const store = tx.objectStore('meds');
-            const med = await new Promise(r => {
-                const req = store.get(id); req.onsuccess = () => r(req.result);
-            });
-            if(med.stock > 0) {
-                med.stock -= 1;
-                await store.put(med);
-                showToast("Dose logged! Stock updated.");
-                renderList();
-            }
+        function prepareNewMed() {
+            currentEditId = null; document.getElementById('name').value = ''; document.getElementById('stock').value = '';
+            ['m','a','n'].forEach(c => { document.getElementById(c).checked = false; hToggle(c, 't'+c); });
+            showView('view-edit');
         }
 
         async function renderQR() {
             const db = await dbP();
-            const list = await new Promise(r => {
-                const req = db.transaction('meds').objectStore('meds').getAll();
-                req.onsuccess = () => r(req.result);
-            });
-            const summary = document.getElementById('qr-summary');
-            summary.textContent = "CURRENT MEDICATIONS:\n" + list.map(m => `- ${m.name}`).join('\n');
+            const list = await new Promise(r => { const req = db.transaction('meds').objectStore('meds').getAll(); req.onsuccess = () => r(req.result); });
+            document.getElementById('qr-summary').textContent = "Patient Meds: " + list.map(m => m.name).join(', ');
             document.getElementById("qrcode").innerHTML = "";
-            new QRCode(document.getElementById("qrcode"), { text: JSON.stringify(list.map(m => ({n:m.name, s:m.stock}))), width: 280, height: 280 });
+            new QRCode(document.getElementById("qrcode"), { text: JSON.stringify(list.map(m => m.name)), width: 280, height: 280 });
         }
 
         window.onload = () => {
-            const savedTheme = localStorage.getItem('pillbot-theme') || 'light';
-            document.body.setAttribute('data-theme', savedTheme);
+            const theme = localStorage.getItem('pb-theme') || 'light';
+            document.body.setAttribute('data-theme', theme);
             renderList();
         };
     </script>

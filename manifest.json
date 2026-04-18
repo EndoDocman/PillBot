@@ -1,0 +1,9 @@
+{
+  "name": "PillBot Personal",
+  "short_name": "PillBot",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#f4f7f6",
+  "theme_color": "#2563eb",
+  "icons": [{"src": "https://cdn-icons-png.flaticon.com/512/822/822143.png", "sizes": "512x512", "type": "image/png"}]
+}

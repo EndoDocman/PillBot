@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PillBot Tablet</title>
+    <link rel="manifest" href="manifest.json">
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <style>
+        :root { --blue: #2563eb; --red: #dc2626; }
+        body { font-family: sans-serif; background: #f4f7f6; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .card { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); width: 90%; max-width: 800px; margin-bottom: 20px; }
+        input { width: 100%; font-size: 2rem; padding: 10px; margin: 10px 0 20px 0; border: 2px solid #ddd; border-radius: 10px; box-sizing: border-box; }
+        .dose { padding: 20px; font-size: 2rem; border-radius: 10px; margin: 10px 0; display: flex; align-items: center; gap: 20px; }
+        button { width: 100%; padding: 25px; font-size: 2.5rem; border: none; border-radius: 15px; cursor: pointer; margin-top: 15px; }
+        .save { background: var(--blue); color: white; }
+        .id { background: #10b981; color: white; }
+        #qr-view { display: none; text-align: center; }
+        .inv { font-size: 2rem; text-align: center; padding: 20px; border-radius: 10px; }
+        .low { background: #fee2e2; color: var(--red); border: 4px solid var(--red); animation: blink 1s infinite; }
+        @keyframes blink { 50% { opacity: 0.5; } }
+    </style>
+</head>
+<body>
+    <div id="main">
+        <h1>💊 PillBot Personal</h1>
+        <div class="card">
+            <label style="font-size:1.5rem">Tablet Name</label>
+            <input type="text" id="name" placeholder="Levothyroxine">
+            <label style="font-size:1.5rem">Current Stock</label>
+            <input type="number" id="stock" placeholder="30">
+            <div class="dose" style="background:#fff9db"><input type="checkbox" id="m" style="transform:scale(3)"> ☀️ Morning</div>
+            <div class="dose" style="background:#fff4e6"><input type="checkbox" id="a" style="transform:scale(3)"> 🌤️ Afternoon</div>
+            <div class="dose" style="background:#ebfbee"><input type="checkbox" id="n" style="transform:scale(3)"> 🌙 Night</div>
+            <button class="save" onclick="save()">SAVE & ACTIVATE</button>
+            <button class="id" onclick="showQR()">EMERGENCY ID</button>
+        </div>
+        <div id="stats"></div>
+    </div>
+    <div id="qr-view" class="card">
+        <h1 style="color:var(--red)">🚨 EMERGENCY ID</h1>
+        <div id="sum" style="font-size:2rem; margin-bottom:20px"></div>
+        <div id="qrcode" style="display:inline-block; border:10px solid white"></div>
+        <button class="save" onclick="location.reload()">BACK</button>
+    </div>
+    <script>
+        if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+        async function save() {
+            const data = { 
+                name: document.getElementById('name').value, 
+                stock: parseInt(document.getElementById('stock').value),
+                m: document.getElementById('m').checked, a: document.getElementById('a').checked, n: document.getElementById('n').checked,
+                hash: "GENESIS", ts: new Date().toISOString()
+            };
+            const db = await openDB();
+            db.transaction('meds','readwrite').objectStore('meds').put(data, 'current_med');
+            alert("Secured in Local Ledger ✅");
+            render();
+        }
+        async function render() {
+            const db = await openDB();
+            const data = await new Promise(r => {
+                const req = db.transaction('meds').objectStore('meds').get('current_med');
+                req.onsuccess = () => r(req.result);
+            });
+            if(!data) return;
+            const daily = (data.m?1:0)+(data.a?1:0)+(data.n?1:0);
+            const days = Math.floor(data.stock/daily);
+            document.getElementById('stats').innerHTML = `<div class="inv ${days < 5 ? 'low' : ''}">STOCK: ${data.stock} (${days} days left)</div>`;
+        }
+        function openDB() {
+            return new Promise(res => {
+                const req = indexedDB.open('PillBotDB', 1);
+                req.onupgradeneeded = e => e.target.result.createObjectStore('meds');
+                req.onsuccess = e => res(req.result);
+            });
+        }
+        async function showQR() {
+            const db = await openDB();
+            const data = await new Promise(r => {
+                const req = db.transaction('meds').objectStore('meds').get('current_med');
+                req.onsuccess = () => r(req.result);
+            });
+            document.getElementById('main').style.display='none';
+            document.getElementById('qr-view').style.display='block';
+            document.getElementById('sum').innerText = `Tablet: ${data.name} | Doses: ${data.m?'M':''} ${data.a?'A':''} ${data.n?'N':''}`;
+            document.getElementById("qrcode").innerHTML = "";
+            new QRCode(document.getElementById("qrcode"), { text: JSON.stringify(data), width: 300, height: 300 });
+        }
+        window.onload = render;
+    </script>
+</body>
+</html>

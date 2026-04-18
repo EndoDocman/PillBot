@@ -1,5 +1,5 @@
-// PillBot Service Worker - v3.6 Robustness Update
-const CACHE_NAME = 'pillbot-cache-v4';
+// PillBot Service Worker - v3.7 Robustness Update
+const CACHE_NAME = 'pillbot-cache-v5';
 const ASSETS = [
     './',
     './index.html',
@@ -15,12 +15,11 @@ self.addEventListener('activate', (e) => {
     e.waitUntil(clients.claim());
 });
 
-// The secret to iOS backgrounding: Use 'self.registration.showNotification' from here
 self.addEventListener('notificationclick', function(event) {
     event.notification.close();
     if (event.action === 'took-it') {
-        const id = event.notification.data.id;
-        event.waitUntil(updateInventory(id));
+        const id = event.notification.data ? event.notification.data.id : null;
+        if(id) event.waitUntil(updateInventory(id));
     }
 });
 

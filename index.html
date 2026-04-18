@@ -13,9 +13,8 @@
         .container { max-width: 500px; margin: 0 auto; padding-bottom: 30px; }
         header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 5px; }
         h1 { font-size: 1.8rem; color: var(--blue); font-weight: 900; margin: 0; }
-        .top-nav { display: flex; gap: 8px; }
         .nav-btn { background: var(--card); border: 1.5px solid var(--border); color: var(--text); padding: 8px 12px; border-radius: 12px; font-size: 0.9rem; font-weight: 700; cursor: pointer; }
-        .install-btn { background: var(--green); color: white; border: none; padding: 8px 15px; border-radius: 12px; font-size: 0.9rem; font-weight: 800; cursor: pointer; }
+        .install-btn { background: var(--green); color: white; border: none; padding: 8px 15px; border-radius: 12px; font-size: 0.9rem; font-weight: 800; cursor: pointer; display: none; }
         .med-card { background: var(--card); border-radius: 24px; padding: 20px; margin-bottom: 15px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1.5px solid var(--border); }
         .med-name { font-size: 1.6rem; font-weight: 900; color: var(--blue); margin-bottom: 5px; }
         .gauge-bar { height: 12px; background: var(--progress-bg); border-radius: 6px; overflow: hidden; margin: 10px 0; }
@@ -27,7 +26,7 @@
         .view { display: none; } .view.active { display: block; }
         input[type="text"], input[type="number"], select { width: 100%; font-size: 1.3rem; padding: 15px; border: 2.5px solid var(--border); border-radius: 15px; background: var(--card); color: var(--text); margin-bottom: 15px; box-sizing: border-box; }
         .autocomplete-container { position: relative; }
-        .autocomplete-list { position: absolute; top: 100%; left: 0; right: 0; background: var(--card); border: 2.5px solid var(--border); border-radius: 15px; z-index: 100; max-height: 180px; overflow-y: auto; display: none; box-shadow: 0 10px 15px rgba(0,0,0,0.1); margin-top: -10px; }
+        .autocomplete-list { position: absolute; top: 100%; left: 0; right: 0; background: var(--card); border: 1.5px solid var(--border); border-radius: 15px; z-index: 100; max-height: 180px; overflow-y: auto; display: none; box-shadow: 0 10px 15px rgba(0,0,0,0.1); margin-top: -15px; }
         .ac-item { padding: 12px 15px; cursor: pointer; border-bottom: 1px solid var(--border); font-weight: 600; }
         .ac-item:hover { background: var(--accent); }
         .dose-box { padding: 15px; border-radius: 18px; margin-bottom: 10px; border: 2.5px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
@@ -36,7 +35,8 @@
         #toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #1e293b; color: white; padding: 12px 25px; border-radius: 30px; font-weight: 800; display: none; z-index: 2000; }
         #qrcode { background: white; padding: 10px; border-radius: 15px; display: inline-block; }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 3000; justify-content: center; align-items: center; }
-        .modal-card { background: white; padding: 30px; border-radius: 25px; width: 85%; max-width: 400px; text-align: center; }
+        .modal-card { background: var(--card); color: var(--text); padding: 30px; border-radius: 25px; width: 85%; max-width: 400px; text-align: center; border: 1px solid var(--border); }
+        #system-log { font-family: monospace; font-size: 0.7rem; background: #000; color: #0f0; padding: 10px; border-radius: 10px; height: 100px; overflow-y: scroll; margin-top: 20px; display: none; }
     </style>
 </head>
 <body data-theme="light">
@@ -61,6 +61,8 @@
             <button class="add-btn" onclick="prepareNewMed()">➕ ADD MEDICINE</button>
             <button class="nav-btn" style="width:100%; margin-top:15px; background:var(--green); color:white" onclick="requestNotif()">🔔 ENABLE ALERTS</button>
             <button class="nav-btn" style="width:100%; margin-top:10px" onclick="testNotif()">🧪 TEST ALERT</button>
+            <button class="nav-btn" style="width:100%; margin-top:10px; font-size: 0.7rem; opacity: 0.5;" onclick="toggleLog()">Toggle System Log</button>
+            <div id="system-log"></div>
         </div>
         <div id="view-edit" class="view">
             <header><h1>Edit Med</h1><button class="nav-btn" onclick="showView('view-dashboard')">✖️ Close</button></header>
@@ -70,7 +72,8 @@
                     <input type="text" id="name" placeholder="Start typing..." autocomplete="off">
                     <div id="ac-list" class="autocomplete-list"></div>
                 </div>
-                <label style="font-weight:800">Pills in Box</label><input type="number" id="stock" placeholder="30">
+                <label style="font-weight:800">Pills in Box</label>
+                <input type="number" id="stock" placeholder="30" inputmode="numeric" pattern="[0-9]*">
                 <label style="font-weight:800">Schedule</label>
                 <div class="dose-box" id="row-m"><div><input type="checkbox" id="m" onchange="hT('m','tm')"> ☀️ Morning</div><input type="time" id="tm" style="display:none" value="08:00"></div>
                 <div class="dose-box" id="row-a"><div><input type="checkbox" id="a" onchange="hT('a','ta')"> 🌤️ Afternoon</div><input type="time" id="ta" style="display:none" value="13:00"></div>
@@ -92,31 +95,50 @@
     </div>
     <div id="toast"></div>
     <script>
-        const MEDS = ["Metformin", "Levothyroxine", "Atorvastatin", "Amlodipine", "Lisinopril", "Glimepiride", "Vildagliptin", "Sitagliptin", "Gliclazide", "Telmisartan", "Thyronorm", "Januvia", "Galvus", "Glycomet", "Ozempic", "Jardiance", "Lantus", "Novorapid", "Humalog"];
+        const MEDS = ["Metformin", "Levothyroxine", "Atorvastatin", "Amlodipine", "Lisinopril", "Glimepiride", "Vildagliptin", "Sitagliptin", "Gliclazide", "Telmisartan", "Thyronorm", "Januvia", "Galvus", "Glycomet", "Ozempic", "Jardiance", "Lantus", "Humalog"];
         let curId = null;
         const dbP = () => new Promise(res => { const req = indexedDB.open('PillBotV3', 1); req.onupgradeneeded = e => e.target.result.createObjectStore('meds', { keyPath: 'id' }); req.onsuccess = e => res(e.target.result); });
         
+        function log(msg) {
+            const el = document.getElementById('system-log');
+            const time = new Date().toLocaleTimeString();
+            el.innerHTML += `[${time}] ${msg}<br>`;
+            el.scrollTop = el.scrollHeight;
+        }
+
+        function toggleLog() {
+            const el = document.getElementById('system-log');
+            el.style.display = el.style.display === 'block' ? 'none' : 'block';
+        }
+
         if ('serviceWorker' in navigator) { 
-            navigator.serviceWorker.register('sw.js').then(reg => {
-                console.log("SW Registered");
-            });
+            navigator.serviceWorker.register('sw.js').then(reg => { log("SW Registered Successfully"); });
             navigator.serviceWorker.addEventListener('message', e => { if(e.data.type === 'REFRESH') renderList(); }); 
         }
 
         async function requestNotif() {
             const permission = await Notification.requestPermission();
+            log("Permission status: " + permission);
             alert(permission === 'granted' ? "Alerts Enabled! ✅" : "Alerts Blocked. Check tablet settings.");
         }
 
         function testNotif() {
-            notify({name: "PillBot Test"}, "Test");
+            log("Triggering test alert...");
+            notify({name: "PillBot Test", id: "test"}, "Test");
         }
 
         const nIn = document.getElementById('name'), acL = document.getElementById('ac-list');
         nIn.addEventListener('input', function() {
             const v = this.value; acL.innerHTML = ''; if (!v) { acL.style.display = 'none'; return; }
             const ms = MEDS.filter(m => m.toLowerCase().includes(v.toLowerCase()));
-            if (ms.length > 0) { acL.style.display = 'block'; ms.forEach(m => { const d = document.createElement('div'); d.className = 'ac-item'; d.textContent = m; d.onclick = () => { nIn.value = m; acL.style.display = 'none'; }; acL.appendChild(d); }); } else { acL.style.display = 'none'; }
+            if (ms.length > 0) {
+                acL.style.display = 'block';
+                ms.forEach(m => {
+                    const d = document.createElement('div'); d.className = 'ac-item'; d.textContent = m;
+                    d.onclick = () => { nIn.value = m; acL.style.display = 'none'; };
+                    acL.appendChild(d);
+                });
+            } else { acL.style.display = 'none'; }
         });
 
         function toggleTheme() { const t = document.body.getAttribute('data-theme') === 'light' ? 'dark' : 'light'; document.body.setAttribute('data-theme', t); localStorage.setItem('pb-theme', t); }
@@ -127,8 +149,12 @@
         async function saveMed() {
             const name = nIn.value; if(!name) return showToast("⚠️ Enter Name");
             const med = { id: curId || "M_" + Date.now(), name, stock: parseInt(document.getElementById('stock').value)||0, max: parseInt(document.getElementById('stock').value)||30, m: document.getElementById('m').checked, a: document.getElementById('a').checked, n: document.getElementById('n').checked, w: document.getElementById('w').checked, tm: document.getElementById('tm').value, ta: document.getElementById('ta').value, tn: document.getElementById('tn').value, tw: document.getElementById('tw').value, day: document.getElementById('day-w').value };
-            const db = await dbP(); await db.transaction('meds','readwrite').objectStore('meds').put(med); showView('view-dashboard'); renderList(); 
+            const db = await dbP(); await db.transaction('meds','readwrite').objectStore('meds').put(med);
+            log("Med Saved: " + name + " @ " + med.tm);
+            showView('view-dashboard'); renderList(); 
         }
+
+        async function deleteMed() { if(!curId) return; const db = await dbP(); await db.transaction('meds','readwrite').objectStore('meds').delete(curId); showView('view-dashboard'); renderList(); }
 
         async function renderList() {
             const db = await dbP(); const list = await new Promise(r => { const req = db.transaction('meds').objectStore('meds').getAll(); req.onsuccess = () => r(req.result); });
@@ -144,8 +170,11 @@
 
         function startSched(list) {
             if(window.schedInt) clearInterval(window.schedInt);
+            log("Scheduler starting for " + list.length + " meds");
             window.schedInt = setInterval(() => {
-                const now = new Date(); const cur = now.getHours().toString().padStart(2,'0') + ":" + now.getMinutes().toString().padStart(2,'0');
+                const now = new Date(); 
+                const cur = now.getHours().toString().padStart(2,'0') + ":" + now.getMinutes().toString().padStart(2,'0');
+                if(now.getSeconds() === 0) log("Checking time: " + cur);
                 list.forEach(m => {
                     if(m.m && m.tm === cur && now.getSeconds() < 2) notify(m, 'Morning');
                     if(m.a && m.ta === cur && now.getSeconds() < 2) notify(m, 'Afternoon');
@@ -155,10 +184,13 @@
         }
 
         function notify(m, s) { 
+            log("Attempting notification for: " + m.name + " (" + s + ")");
             if ('serviceWorker' in navigator && Notification.permission === 'granted') { 
                 navigator.serviceWorker.ready.then(reg => { reg.showNotification(`PillBot: ${s} Dose`, { body: `Time for ${m.name}.`, data: { id: m.id }, requireInteraction: true, actions: [{ action: 'took-it', title: '✅ I TOOK IT' }] }); }); 
             } else if (Notification.permission === 'granted') {
                 new Notification(`PillBot: ${s} Dose`, { body: `Time for ${m.name}.` });
+            } else {
+                log("Notification blocked or permission not granted");
             }
         }
 
@@ -171,8 +203,15 @@
         async function editMed(id) {
             const db = await dbP(); const med = await new Promise(r => { const req = db.transaction('meds').objectStore('meds').get(id); req.onsuccess = () => r(req.result); });
             curId = id; nIn.value = med.name; document.getElementById('stock').value = med.stock;
-            ['m','a','n','w'].forEach(c => { document.getElementById(c).checked = med[c]; hT(c, 't'+c); });
-            document.getElementById('tm').value = med.tm || '08:00'; document.getElementById('ta').value = med.ta || '13:00'; document.getElementById('tn').value = med.tn || '21:00';
+            ['m', 'a', 'n', 'w'].forEach(c => {
+                const cb = document.getElementById(c);
+                cb.checked = med[c];
+                hT(c, 't' + c);
+                if (med[c] && med['t' + c]) {
+                    document.getElementById('t' + c).value = med['t' + c];
+                }
+            });
+            if (med.w) document.getElementById('day-w').value = med.day;
             showView('view-edit');
         }
 

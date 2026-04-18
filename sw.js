@@ -1,10 +1,9 @@
-// PillBot Service Worker - v3.1 Robustness Update
-const CACHE_NAME = 'pillbot-cache-v3';
+// PillBot Service Worker - v3.6 Robustness Update
+const CACHE_NAME = 'pillbot-cache-v4';
 const ASSETS = [
     './',
     './index.html',
-    './manifest.json',
-    'https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js'
+    './manifest.json'
 ];
 
 self.addEventListener('install', (e) => {
@@ -16,6 +15,7 @@ self.addEventListener('activate', (e) => {
     e.waitUntil(clients.claim());
 });
 
+// The secret to iOS backgrounding: Use 'self.registration.showNotification' from here
 self.addEventListener('notificationclick', function(event) {
     event.notification.close();
     if (event.action === 'took-it') {
@@ -37,7 +37,6 @@ async function updateInventory(id) {
     });
     if (med && med.stock > 0) {
         med.stock -= 1;
-        med.lastTaken = new Date().toISOString();
         await new Promise(r => {
             const putReq = store.put(med);
             putReq.onsuccess = () => r();

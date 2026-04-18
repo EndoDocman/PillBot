@@ -13,8 +13,9 @@
         .container { max-width: 500px; margin: 0 auto; padding-bottom: 30px; }
         header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 5px; }
         h1 { font-size: 1.8rem; color: var(--blue); font-weight: 900; margin: 0; }
+        .top-nav { display: flex; gap: 8px; }
         .nav-btn { background: var(--card); border: 1.5px solid var(--border); color: var(--text); padding: 8px 12px; border-radius: 12px; font-size: 0.9rem; font-weight: 700; cursor: pointer; }
-        .install-btn { background: var(--green); color: white; border: none; padding: 8px 15px; border-radius: 12px; font-size: 0.9rem; font-weight: 800; cursor: pointer; display: none; }
+        .install-btn { background: var(--green); color: white; border: none; padding: 8px 15px; border-radius: 12px; font-size: 0.9rem; font-weight: 800; cursor: pointer; }
         .med-card { background: var(--card); border-radius: 24px; padding: 20px; margin-bottom: 15px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1.5px solid var(--border); }
         .med-name { font-size: 1.6rem; font-weight: 900; color: var(--blue); margin-bottom: 5px; }
         .gauge-bar { height: 12px; background: var(--progress-bg); border-radius: 6px; overflow: hidden; margin: 10px 0; }
@@ -25,7 +26,8 @@
         .btn-taken { background: var(--accent); color: var(--green); border: 2.5px solid var(--green); }
         .view { display: none; } .view.active { display: block; }
         input[type="text"], input[type="number"], select { width: 100%; font-size: 1.3rem; padding: 15px; border: 2.5px solid var(--border); border-radius: 15px; background: var(--card); color: var(--text); margin-bottom: 15px; box-sizing: border-box; }
-        .autocomplete-list { position: absolute; top: 100%; left: 0; right: 0; background: var(--card); border: 1.5px solid var(--border); border-radius: 15px; z-index: 100; max-height: 180px; overflow-y: auto; display: none; box-shadow: 0 10px 15px rgba(0,0,0,0.1); margin-top: -10px; }
+        .autocomplete-container { position: relative; }
+        .autocomplete-list { position: absolute; top: 100%; left: 0; right: 0; background: var(--card); border: 2.5px solid var(--border); border-radius: 15px; z-index: 100; max-height: 180px; overflow-y: auto; display: none; box-shadow: 0 10px 15px rgba(0,0,0,0.1); margin-top: -10px; }
         .ac-item { padding: 12px 15px; cursor: pointer; border-bottom: 1px solid var(--border); font-weight: 600; }
         .ac-item:hover { background: var(--accent); }
         .dose-box { padding: 15px; border-radius: 18px; margin-bottom: 10px; border: 2.5px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
@@ -33,36 +35,47 @@
         .add-btn { background: var(--blue); color: white; width:100%; padding:20px; border-radius:18px; font-weight:800; font-size:1.3rem; border:none; cursor:pointer; margin-top: 20px; }
         #toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #1e293b; color: white; padding: 12px 25px; border-radius: 30px; font-weight: 800; display: none; z-index: 2000; }
         #qrcode { background: white; padding: 10px; border-radius: 15px; display: inline-block; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 3000; justify-content: center; align-items: center; }
+        .modal-card { background: white; padding: 30px; border-radius: 25px; width: 85%; max-width: 400px; text-align: center; }
     </style>
 </head>
 <body data-theme="light">
+    <div id="install-modal" class="modal" onclick="this.style.display='none'">
+        <div class="modal-card" onclick="event.stopPropagation()">
+            <h2 style="color:var(--blue); font-size:1.5rem">📲 Install PillBot</h2>
+            <p style="font-size:1.1rem; text-align:left; margin:15px 0"><b>iPad/iPhone:</b> Tap 'Share' (square icon) and 'Add to Home Screen'.<br><br><b>Android:</b> Tap 'Settings' (3 dots) and 'Install App'.</p>
+            <button class="nav-btn" style="width:100%; background:var(--blue); color:white; padding:15px" onclick="document.getElementById('install-modal').style.display='none'">OKAY</button>
+        </div>
+    </div>
     <div class="container">
         <div id="view-dashboard" class="view active">
             <header>
                 <h1>💊 PillBot</h1>
                 <div class="top-nav">
-                    <button id="install-btn" class="install-btn" onclick="triggerInstall()">📲 Install</button>
+                    <button id="header-install-btn" class="install-btn" onclick="document.getElementById('install-modal').style.display='flex'">📲 Install</button>
                     <button class="nav-btn" onclick="toggleTheme()">🌓 Mode</button>
                     <button class="nav-btn" onclick="showView('view-qr')">🆔 My ID</button>
                 </div>
             </header>
             <div id="med-list"></div>
             <button class="add-btn" onclick="prepareNewMed()">➕ ADD MEDICINE</button>
+            <button class="nav-btn" style="width:100%; margin-top:15px; background:var(--green); color:white" onclick="requestNotif()">🔔 ENABLE ALERTS</button>
+            <button class="nav-btn" style="width:100%; margin-top:10px" onclick="testNotif()">🧪 TEST ALERT</button>
         </div>
         <div id="view-edit" class="view">
             <header><h1>Edit Med</h1><button class="nav-btn" onclick="showView('view-dashboard')">✖️ Close</button></header>
             <div class="med-card">
                 <label style="font-weight:800">Name</label>
-                <div style="position:relative">
+                <div class="autocomplete-container">
                     <input type="text" id="name" placeholder="Start typing..." autocomplete="off">
                     <div id="ac-list" class="autocomplete-list"></div>
                 </div>
                 <label style="font-weight:800">Pills in Box</label><input type="number" id="stock" placeholder="30">
                 <label style="font-weight:800">Schedule</label>
-                <div class="dose-box" id="row-m"><div><input type="checkbox" id="m" style="width:28px;height:28px" onchange="hT('m','tm')"> ☀️ Morning</div><input type="time" id="tm" style="display:none" value="08:00"></div>
-                <div class="dose-box" id="row-a"><div><input type="checkbox" id="a" style="width:28px;height:28px" onchange="hT('a','ta')"> 🌤️ Afternoon</div><input type="time" id="ta" style="display:none" value="13:00"></div>
-                <div class="dose-box" id="row-n"><div><input type="checkbox" id="n" style="width:28px;height:28px" onchange="hT('n','tn')"> 🌙 Night</div><input type="time" id="tn" style="display:none" value="21:00"></div>
-                <div class="dose-box" id="row-w"><div><input type="checkbox" id="w" style="width:28px;height:28px" onchange="hT('w','tw')"> 📅 Weekly</div>
+                <div class="dose-box" id="row-m"><div><input type="checkbox" id="m" onchange="hT('m','tm')"> ☀️ Morning</div><input type="time" id="tm" style="display:none" value="08:00"></div>
+                <div class="dose-box" id="row-a"><div><input type="checkbox" id="a" onchange="hT('a','ta')"> 🌤️ Afternoon</div><input type="time" id="ta" style="display:none" value="13:00"></div>
+                <div class="dose-box" id="row-n"><div><input type="checkbox" id="n" onchange="hT('n','tn')"> 🌙 Night</div><input type="time" id="tn" style="display:none" value="21:00"></div>
+                <div class="dose-box" id="row-w"><div><input type="checkbox" id="w" onchange="hT('w','tw')"> 📅 Weekly</div>
                     <div style="display:flex;flex-direction:column;gap:5px"><select id="day-w" style="display:none;margin:0;font-size:1rem"><option>Monday</option><option>Tuesday</option><option>Wednesday</option><option>Thursday</option><option>Friday</option><option>Saturday</option><option>Sunday</option></select><input type="time" id="tw" style="display:none" value="09:00"></div>
                 </div>
                 <button class="add-btn" style="background:var(--blue)" onclick="saveMed()">💾 SAVE MEDICINE</button>
@@ -79,28 +92,44 @@
     </div>
     <div id="toast"></div>
     <script>
-        const MEDS = ["Metformin", "Levothyroxine", "Atorvastatin", "Amlodipine", "Lisinopril", "Glimepiride", "Vildagliptin", "Sitagliptin", "Gliclazide", "Telmisartan", "Thyronorm", "Januvia", "Galvus", "Glycomet", "Ozempic", "Jardiance", "Lantus", "Humalog"];
-        let curId = null, defP;
+        const MEDS = ["Metformin", "Levothyroxine", "Atorvastatin", "Amlodipine", "Lisinopril", "Glimepiride", "Vildagliptin", "Sitagliptin", "Gliclazide", "Telmisartan", "Thyronorm", "Januvia", "Galvus", "Glycomet", "Ozempic", "Jardiance", "Lantus", "Novorapid", "Humalog"];
+        let curId = null;
         const dbP = () => new Promise(res => { const req = indexedDB.open('PillBotV3', 1); req.onupgradeneeded = e => e.target.result.createObjectStore('meds', { keyPath: 'id' }); req.onsuccess = e => res(e.target.result); });
-        if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js'); navigator.serviceWorker.addEventListener('message', e => { if(e.data.type === 'REFRESH') renderList(); }); }
-        window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); defP = e; if (!window.matchMedia('(display-mode: standalone)').matches) document.getElementById('install-btn').style.display = 'block'; });
-        async function triggerInstall() { if (defP) { defP.prompt(); const { outcome } = await defP.userChoice; if (outcome === 'accepted') document.getElementById('install-btn').style.display = 'none'; defP = null; } else { alert("iPhone/iPad: Tap 'Share' then 'Add to Home Screen'"); } }
+        
+        if ('serviceWorker' in navigator) { 
+            navigator.serviceWorker.register('sw.js').then(reg => {
+                console.log("SW Registered");
+            });
+            navigator.serviceWorker.addEventListener('message', e => { if(e.data.type === 'REFRESH') renderList(); }); 
+        }
+
+        async function requestNotif() {
+            const permission = await Notification.requestPermission();
+            alert(permission === 'granted' ? "Alerts Enabled! ✅" : "Alerts Blocked. Check tablet settings.");
+        }
+
+        function testNotif() {
+            notify({name: "PillBot Test"}, "Test");
+        }
+
         const nIn = document.getElementById('name'), acL = document.getElementById('ac-list');
         nIn.addEventListener('input', function() {
             const v = this.value; acL.innerHTML = ''; if (!v) { acL.style.display = 'none'; return; }
             const ms = MEDS.filter(m => m.toLowerCase().includes(v.toLowerCase()));
             if (ms.length > 0) { acL.style.display = 'block'; ms.forEach(m => { const d = document.createElement('div'); d.className = 'ac-item'; d.textContent = m; d.onclick = () => { nIn.value = m; acL.style.display = 'none'; }; acL.appendChild(d); }); } else { acL.style.display = 'none'; }
         });
-        document.addEventListener('click', (e) => { if (e.target !== nIn) acL.style.display = 'none'; });
+
         function toggleTheme() { const t = document.body.getAttribute('data-theme') === 'light' ? 'dark' : 'light'; document.body.setAttribute('data-theme', t); localStorage.setItem('pb-theme', t); }
         function showView(id) { document.querySelectorAll('.view').forEach(v => v.classList.remove('active')); document.getElementById(id).classList.add('active'); if(id === 'view-qr') renderQR(); }
         function hT(c, t) { const ck = document.getElementById(c).checked; document.getElementById(t).style.display = ck ? 'block' : 'none'; if(c === 'w') document.getElementById('day-w').style.display = ck ? 'block' : 'none'; document.getElementById('row-' + c).classList.toggle('active', ck); }
         function showToast(m) { const t = document.getElementById('toast'); t.textContent = m; t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 3000); }
+        
         async function saveMed() {
             const name = nIn.value; if(!name) return showToast("⚠️ Enter Name");
             const med = { id: curId || "M_" + Date.now(), name, stock: parseInt(document.getElementById('stock').value)||0, max: parseInt(document.getElementById('stock').value)||30, m: document.getElementById('m').checked, a: document.getElementById('a').checked, n: document.getElementById('n').checked, w: document.getElementById('w').checked, tm: document.getElementById('tm').value, ta: document.getElementById('ta').value, tn: document.getElementById('tn').value, tw: document.getElementById('tw').value, day: document.getElementById('day-w').value };
-            const db = await dbP(); await db.transaction('meds','readwrite').objectStore('meds').put(med); showView('view-dashboard'); renderList(); Notification.requestPermission();
+            const db = await dbP(); await db.transaction('meds','readwrite').objectStore('meds').put(med); showView('view-dashboard'); renderList(); 
         }
+
         async function renderList() {
             const db = await dbP(); const list = await new Promise(r => { const req = db.transaction('meds').objectStore('meds').getAll(); req.onsuccess = () => r(req.result); });
             const container = document.getElementById('med-list'); container.innerHTML = '';
@@ -112,37 +141,56 @@
             });
             startSched(list);
         }
+
         function startSched(list) {
-            setInterval(() => {
+            if(window.schedInt) clearInterval(window.schedInt);
+            window.schedInt = setInterval(() => {
                 const now = new Date(); const cur = now.getHours().toString().padStart(2,'0') + ":" + now.getMinutes().toString().padStart(2,'0');
                 list.forEach(m => {
                     if(m.m && m.tm === cur && now.getSeconds() < 2) notify(m, 'Morning');
                     if(m.a && m.ta === cur && now.getSeconds() < 2) notify(m, 'Afternoon');
                     if(m.n && m.tn === cur && now.getSeconds() < 2) notify(m, 'Night');
-                    if(m.w && m.tw === cur && m.day === now.toLocaleDateString('en-US', {weekday: 'long'}) && now.getSeconds() < 2) notify(m, 'Weekly');
                 });
             }, 1000);
         }
-        function notify(m, s) { if ('serviceWorker' in navigator && Notification.permission === 'granted') { navigator.serviceWorker.ready.then(reg => { reg.showNotification(`PillBot: ${s} Dose`, { body: `Time for ${m.name}.`, data: { id: m.id }, actions: [{ action: 'took-it', title: '✅ I TOOK IT' }] }); }); } }
+
+        function notify(m, s) { 
+            if ('serviceWorker' in navigator && Notification.permission === 'granted') { 
+                navigator.serviceWorker.ready.then(reg => { reg.showNotification(`PillBot: ${s} Dose`, { body: `Time for ${m.name}.`, data: { id: m.id }, requireInteraction: true, actions: [{ action: 'took-it', title: '✅ I TOOK IT' }] }); }); 
+            } else if (Notification.permission === 'granted') {
+                new Notification(`PillBot: ${s} Dose`, { body: `Time for ${m.name}.` });
+            }
+        }
+
         async function takeDose(id) {
             const db = await dbP(); const tx = db.transaction('meds', 'readwrite'); const store = tx.objectStore('meds');
             const med = await new Promise(r => { const req = store.get(id); req.onsuccess = () => r(req.result); });
             if(med.stock > 0) { med.stock -= 1; await store.put(med); const btn = document.getElementById('btn-' + id); btn.textContent = "✅ TAKEN"; btn.className = "action-btn btn-taken"; setTimeout(renderList, 1500); }
         }
+
         async function editMed(id) {
             const db = await dbP(); const med = await new Promise(r => { const req = db.transaction('meds').objectStore('meds').get(id); req.onsuccess = () => r(req.result); });
             curId = id; nIn.value = med.name; document.getElementById('stock').value = med.stock;
             ['m','a','n','w'].forEach(c => { document.getElementById(c).checked = med[c]; hT(c, 't'+c); });
-            document.getElementById('tm').value = med.tm; document.getElementById('ta').value = med.ta; document.getElementById('tn').value = med.tn; document.getElementById('tw').value = med.tw; document.getElementById('day-w').value = med.day;
+            document.getElementById('tm').value = med.tm || '08:00'; document.getElementById('ta').value = med.ta || '13:00'; document.getElementById('tn').value = med.tn || '21:00';
             showView('view-edit');
         }
+
         function prepareNewMed() { curId = null; nIn.value = ''; document.getElementById('stock').value = ''; ['m','a','n','w'].forEach(c => { document.getElementById(c).checked = false; hT(c, 't'+c); }); showView('view-edit'); }
         async function renderQR() {
             const db = await dbP(); const list = await new Promise(r => { const req = db.transaction('meds').objectStore('meds').getAll(); req.onsuccess = () => r(req.result); });
             document.getElementById('qr-sum').textContent = "Meds: " + list.map(m => m.name).join(', ');
             document.getElementById("qrcode").innerHTML = ""; new QRCode(document.getElementById("qrcode"), { text: JSON.stringify(list.map(m => m.name)), width: 250, height: 250 });
         }
-        window.onload = () => { const theme = localStorage.getItem('pb-theme') || 'light'; document.body.setAttribute('data-theme', theme); renderList(); };
+        window.onload = () => { 
+            const t = localStorage.getItem('pb-theme') || 'light'; document.body.setAttribute('data-theme', t); 
+            if(window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
+                document.getElementById('header-install-btn').style.display='none';
+            } else {
+                document.getElementById('header-install-btn').style.display='block';
+            }
+            renderList(); 
+        };
     </script>
 </body>
 </html>

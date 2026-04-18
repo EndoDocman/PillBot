@@ -12,90 +12,42 @@
             --border: #cbd5e1; --blue: #2563eb; --green: #059669; --red: #dc2626;
             --progress-bg: #e2e8f0; --accent: #eff6ff;
         }
-
         [data-theme="dark"] {
             --bg: #0f172a; --card: #1e293b; --text: #f8fafc; --subtext: #94a3b8;
             --border: #334155; --blue: #3b82f6; --green: #10b981; --red: #f87171;
             --progress-bg: #334155; --accent: #1e3a8a;
         }
-
-        body {
-            font-family: system-ui, -apple-system, sans-serif;
-            background-color: var(--bg); color: var(--text);
-            margin: 0; padding: 15px; transition: background 0.3s;
-            -webkit-tap-highlight-color: transparent;
-        }
-
+        body { font-family: system-ui, -apple-system, sans-serif; background-color: var(--bg); color: var(--text); margin: 0; padding: 15px; transition: background 0.3s; -webkit-tap-highlight-color: transparent; }
         .container { max-width: 500px; margin: 0 auto; }
-
         header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
         h1 { font-size: 2rem; color: var(--blue); font-weight: 900; margin: 0; }
-
         .top-nav { display: flex; gap: 8px; }
-        .nav-btn {
-            background: var(--card); border: 2px solid var(--border);
-            color: var(--text); padding: 8px 12px; border-radius: 12px;
-            font-size: 0.9rem; font-weight: 700; display: flex; align-items: center; gap: 5px;
-        }
-
-        /* MEDICATION CARDS */
-        .med-card {
-            background: var(--card); border-radius: 28px; padding: 25px;
-            margin-bottom: 20px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
-            border: 2px solid var(--border);
-        }
-
+        .nav-btn { background: var(--card); border: 2px solid var(--border); color: var(--text); padding: 8px 12px; border-radius: 12px; font-size: 0.9rem; font-weight: 700; display: flex; align-items: center; gap: 5px; cursor: pointer; }
+        .med-card { background: var(--card); border-radius: 28px; padding: 25px; margin-bottom: 20px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); border: 2px solid var(--border); }
         .med-name { font-size: 1.8rem; font-weight: 900; color: var(--blue); margin-bottom: 5px; }
-        
-        /* FUEL GAUGE (Progress Bar) */
         .gauge-container { margin: 15px 0; }
         .gauge-label { display: flex; justify-content: space-between; font-weight: 700; margin-bottom: 5px; font-size: 1rem; }
         .gauge-bar { height: 14px; background: var(--progress-bg); border-radius: 7px; overflow: hidden; }
         .gauge-fill { height: 100%; background: var(--green); transition: width 0.5s ease-out; }
         .low-stock-fill { background: var(--red); }
-
-        .action-btn {
-            width: 100%; padding: 20px; border-radius: 20px; border: none;
-            font-size: 1.4rem; font-weight: 800; cursor: pointer;
-            display: flex; align-items: center; justify-content: center; gap: 10px;
-            transition: 0.2s; margin-top: 10px;
-        }
+        .action-btn { width: 100%; padding: 20px; border-radius: 20px; border: none; font-size: 1.4rem; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 10px; }
         .btn-take { background: var(--green); color: white; }
         .btn-taken { background: var(--accent); color: var(--green); border: 3px solid var(--green); }
-        .btn-edit { background: var(--progress-bg); color: var(--text); font-size: 1rem; padding: 12px; }
-
-        /* FORM */
+        .btn-edit { background: var(--progress-bg); color: var(--text); font-size: 1rem; padding: 12px; margin-top: 15px; }
         .view { display: none; }
         .view.active { display: block; }
         .big-label { font-size: 1.3rem; font-weight: 800; color: var(--text); margin-bottom: 10px; display: block; }
         .help-text { font-size: 1rem; color: var(--subtext); margin-bottom: 15px; display: block; }
-
-        input[type="text"], input[type="number"] {
-            width: 100%; font-size: 1.5rem; padding: 18px; border: 3px solid var(--border);
-            border-radius: 18px; background: var(--card); color: var(--text); margin-bottom: 20px;
-        }
-
-        .dose-box {
-            padding: 18px; border-radius: 20px; margin-bottom: 12px;
-            border: 3px solid var(--border); display: flex; align-items: center; justify-content: space-between;
-        }
+        input[type="text"], input[type="number"] { width: 100%; font-size: 1.5rem; padding: 18px; border: 3px solid var(--border); border-radius: 18px; background: var(--card); color: var(--text); margin-bottom: 20px; }
+        .dose-box { padding: 18px; border-radius: 20px; margin-bottom: 12px; border: 3px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
         .dose-box.active { border-color: var(--blue); background: var(--accent); }
-
-        .add-btn { background: var(--blue); color: white; margin-top: 30px; }
-
-        #toast {
-            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
-            background: #1e293b; color: white; padding: 15px 30px;
-            border-radius: 40px; font-weight: 800; display: none; z-index: 2000;
-        }
-
+        .add-btn { background: var(--blue); color: white; margin-top: 30px; width:100%; padding:20px; border-radius:20px; font-weight:800; font-size:1.4rem; border:none; cursor:pointer; }
+        #toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #1e293b; color: white; padding: 15px 30px; border-radius: 40px; font-weight: 800; display: none; z-index: 2000; }
         #qrcode { background: white; padding: 15px; border-radius: 20px; display: inline-block; }
     </style>
 </head>
 <body data-theme="light">
-
     <div class="container">
-        <!-- Dashboard -->
         <div id="view-dashboard" class="view active">
             <header>
                 <h1>💊 PillBot</h1>
@@ -104,64 +56,40 @@
                     <button class="nav-btn" onclick="showView('view-qr')">🆔 My ID</button>
                 </div>
             </header>
-            
             <div id="med-list"></div>
-
-            <button class="action-btn add-btn" onclick="prepareNewMed()">➕ ADD MEDICINE</button>
+            <button class="add-btn" onclick="prepareNewMed()">➕ ADD MEDICINE</button>
         </div>
-
-        <!-- Add/Edit -->
         <div id="view-edit" class="view">
-            <header>
-                <h1 id="form-title">New Medicine</h1>
-                <button class="nav-btn" onclick="showView('view-dashboard')">✖️ Close</button>
-            </header>
+            <header><h1 id="form-title">New Medicine</h1><button class="nav-btn" onclick="showView('view-dashboard')">✖️ Close</button></header>
             <div class="med-card">
-                <label class="big-label">Medicine Name</label>
-                <span class="help-text">Type the name of your tablet below:</span>
-                <input type="text" id="name" placeholder="e.g. Metformin" autocomplete="off">
-                
-                <label class="big-label">Pills in the Box</label>
-                <span class="help-text">How many pills are in the box right now?</span>
-                <input type="number" id="stock" placeholder="30">
-
+                <label class="big-label">Medicine Name</label><input type="text" id="name" placeholder="e.g. Metformin">
+                <label class="big-label">Pills in the Box</label><input type="number" id="stock" placeholder="30">
                 <label class="big-label">When to take it?</label>
                 <div class="dose-box" id="row-m">
-                    <div style="font-size:1.4rem; font-weight:800; display:flex; align-items:center; gap:10px">
-                        <input type="checkbox" id="m" style="width:30px;height:30px" onchange="hToggle('m','tm')"> Morning
-                    </div>
+                    <div style="font-size:1.4rem; font-weight:800; display:flex; align-items:center; gap:10px"><input type="checkbox" id="m" style="width:30px;height:30px" onchange="hToggle('m','tm')"> Morning</div>
                     <input type="time" id="tm" style="font-size:1.2rem; display:none" value="08:00">
                 </div>
                 <div class="dose-box" id="row-a">
-                    <div style="font-size:1.4rem; font-weight:800; display:flex; align-items:center; gap:10px">
-                        <input type="checkbox" id="a" style="width:30px;height:30px" onchange="hToggle('a','ta')"> Afternoon
-                    </div>
+                    <div style="font-size:1.4rem; font-weight:800; display:flex; align-items:center; gap:10px"><input type="checkbox" id="a" style="width:30px;height:30px" onchange="hToggle('a','ta')"> Afternoon</div>
                     <input type="time" id="ta" style="font-size:1.2rem; display:none" value="13:00">
                 </div>
                 <div class="dose-box" id="row-n">
-                    <div style="font-size:1.4rem; font-weight:800; display:flex; align-items:center; gap:10px">
-                        <input type="checkbox" id="n" style="width:30px;height:30px" onchange="hToggle('n','tn')"> Night
-                    </div>
+                    <div style="font-size:1.4rem; font-weight:800; display:flex; align-items:center; gap:10px"><input type="checkbox" id="n" style="width:30px;height:30px" onchange="hToggle('n','tn')"> Night</div>
                     <input type="time" id="tn" style="font-size:1.2rem; display:none" value="21:00">
                 </div>
-
-                <button class="action-btn add-btn" onclick="saveMed()">💾 SAVE MEDICINE</button>
+                <button class="add-btn" style="background:var(--blue)" onclick="saveMed()">💾 SAVE MEDICINE</button>
+                <button class="add-btn" style="background:var(--red); margin-top:10px" id="delete-btn" onclick="deleteMed()">🗑️ DELETE</button>
             </div>
         </div>
-
-        <!-- Emergency -->
         <div id="view-qr" class="view">
             <header><h1>🚨 Medical ID</h1><button class="nav-btn" onclick="showView('view-dashboard')">✖️ Close</button></header>
             <div class="med-card" style="text-align:center">
-                <div id="qr-summary" style="text-align:left; margin-bottom:20px"></div>
+                <div id="qr-summary" style="text-align:left; margin-bottom:20px; font-weight:700"></div>
                 <div id="qrcode"></div>
-                <p style="color:var(--red); font-weight:900; margin-top:20px">FOR DOCTORS: SCAN TO SEE ALL MEDS</p>
             </div>
         </div>
     </div>
-
     <div id="toast"></div>
-
     <script>
         let currentEditId = null;
         const dbP = () => new Promise(res => {
@@ -170,10 +98,17 @@
             req.onsuccess = e => res(e.target.result);
         });
 
+        // Communication with Service Worker
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js');
+            navigator.serviceWorker.addEventListener('message', e => {
+                if(e.data.type === 'REFRESH') renderList();
+            });
+        }
+
         function toggleTheme() {
-            const b = document.body;
-            const t = b.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
-            b.setAttribute('data-theme', t);
+            const t = document.body.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+            document.body.setAttribute('data-theme', t);
             localStorage.setItem('pb-theme', t);
         }
 
@@ -193,7 +128,6 @@
             const t = document.getElementById('toast');
             t.textContent = msg; t.style.display = 'block';
             setTimeout(() => t.style.display = 'none', 3000);
-            if(window.navigator.vibrate) window.navigator.vibrate(40);
         }
 
         async function saveMed() {
@@ -202,13 +136,20 @@
             const med = {
                 id: currentEditId || "M_" + Date.now(),
                 name: name, stock: parseInt(document.getElementById('stock').value) || 0,
-                max: parseInt(document.getElementById('stock').value) || 30, // For gauge
+                max: parseInt(document.getElementById('stock').value) || 30,
                 m: document.getElementById('m').checked, a: document.getElementById('a').checked, n: document.getElementById('n').checked,
                 tm: document.getElementById('tm').value, ta: document.getElementById('ta').value, tn: document.getElementById('tn').value,
                 lastTaken: null
             };
             const db = await dbP(); await db.transaction('meds','readwrite').objectStore('meds').put(med);
-            showToast("Saved Safely ✅"); showView('view-dashboard'); renderList();
+            showView('view-dashboard'); renderList();
+            Notification.requestPermission();
+        }
+
+        async function deleteMed() {
+            if(!currentEditId) return;
+            const db = await dbP(); await db.transaction('meds','readwrite').objectStore('meds').delete(currentEditId);
+            showView('view-dashboard'); renderList();
         }
 
         async function renderList() {
@@ -216,54 +157,70 @@
             const list = await new Promise(r => { const req = db.transaction('meds').objectStore('meds').getAll(); req.onsuccess = () => r(req.result); });
             const container = document.getElementById('med-list');
             container.innerHTML = '';
-            if(list.length === 0) container.innerHTML = '<p style="text-align:center; padding:40px; font-size:1.2rem">No medicines yet.<br>Tap the blue button below to add one.</p>';
-            
             list.forEach(med => {
                 const perc = Math.min(100, (med.stock / med.max) * 100);
-                const isLow = med.stock < 5;
                 const div = document.createElement('div');
                 div.className = 'med-card';
                 div.innerHTML = `
                     <div class="med-name">${med.name}</div>
                     <div class="gauge-container">
-                        <div class="gauge-label">
-                            <span>Box Fuel</span>
-                            <span>${med.stock} pills left</span>
-                        </div>
-                        <div class="gauge-bar"><div class="gauge-fill ${isLow?'low-stock-fill':''}" style="width:${perc}%"></div></div>
+                        <div class="gauge-label"><span>Box Fuel</span><span>${med.stock} pills left</span></div>
+                        <div class="gauge-bar"><div class="gauge-fill ${med.stock < 5 ? 'low-stock-fill':''}" style="width:${perc}%"></div></div>
                     </div>
                     <button class="action-btn btn-take" id="btn-${med.id}" onclick="takeDose('${med.id}')">🍴 I TOOK MY DOSE</button>
-                    <button class="action-btn btn-edit" onclick="editMed('${med.id}')">⚙️ CHANGE SETTINGS</button>
+                    <button class="btn-edit" onclick="editMed('${med.id}')">⚙️ SETTINGS</button>
                 `;
                 container.appendChild(div);
             });
+            scheduleCheck(list);
+        }
+
+        // Notification Scheduler (Polling Logic)
+        function scheduleCheck(list) {
+            setInterval(() => {
+                const now = new Date();
+                const curTime = now.getHours().toString().padStart(2,'0') + ":" + now.getMinutes().toString().padStart(2,'0');
+                list.forEach(med => {
+                    const times = [];
+                    if(med.m) times.push({t: med.tm, label: 'Morning'});
+                    if(med.a) times.push({t: med.ta, label: 'Afternoon'});
+                    if(med.n) times.push({t: med.tn, label: 'Night'});
+                    
+                    times.forEach(slot => {
+                        if(slot.t === curTime && now.getSeconds() < 2) triggerNotification(med, slot.label);
+                    });
+                });
+            }, 1000);
+        }
+
+        function triggerNotification(med, slot) {
+            if ('serviceWorker' in navigator && Notification.permission === 'granted') {
+                navigator.serviceWorker.ready.then(reg => {
+                    reg.showNotification(`PillBot: ${slot} Dose`, {
+                        body: `Time to take your ${med.name}.`,
+                        icon: 'https://cdn-icons-png.flaticon.com/512/822/822143.png',
+                        data: { id: med.id },
+                        actions: [{ action: 'took-it', title: '✅ I TOOK IT' }]
+                    });
+                });
+            }
         }
 
         async function takeDose(id) {
             const db = await dbP(); const tx = db.transaction('meds', 'readwrite'); const store = tx.objectStore('meds');
             const med = await new Promise(r => { const req = store.get(id); req.onsuccess = () => r(req.result); });
             if(med.stock > 0) {
-                med.stock -= 1;
-                await store.put(med);
+                med.stock -= 1; med.lastTaken = new Date().toISOString(); await store.put(med);
                 const btn = document.getElementById('btn-' + id);
-                btn.textContent = "✅ TAKEN JUST NOW";
-                btn.className = "action-btn btn-taken";
-                if(window.navigator.vibrate) window.navigator.vibrate([30, 50, 30]);
-                setTimeout(renderList, 2000);
+                btn.textContent = "✅ TAKEN JUST NOW"; btn.className = "action-btn btn-taken";
+                setTimeout(renderList, 1500);
             }
         }
 
         async function editMed(id) {
-            const db = await dbP();
-            const med = await new Promise(r => { const req = db.transaction('meds').objectStore('meds').get(id); req.onsuccess = () => r(req.result); });
-            currentEditId = id;
-            document.getElementById('name').value = med.name;
-            document.getElementById('stock').value = med.stock;
-            ['m','a','n'].forEach(c => { 
-                document.getElementById(c).checked = med[c]; 
-                document.getElementById('t'+c).value = med['t'+c] || '08:00';
-                hToggle(c, 't'+c);
-            });
+            const db = await dbP(); const med = await new Promise(r => { const req = db.transaction('meds').objectStore('meds').get(id); req.onsuccess = () => r(req.result); });
+            currentEditId = id; document.getElementById('name').value = med.name; document.getElementById('stock').value = med.stock;
+            ['m','a','n'].forEach(c => { document.getElementById(c).checked = med[c]; document.getElementById('t'+c).value = med['t'+c] || '08:00'; hToggle(c, 't'+c); });
             showView('view-edit');
         }
 
@@ -274,11 +231,10 @@
         }
 
         async function renderQR() {
-            const db = await dbP();
-            const list = await new Promise(r => { const req = db.transaction('meds').objectStore('meds').getAll(); req.onsuccess = () => r(req.result); });
-            document.getElementById('qr-summary').textContent = "Patient Meds: " + list.map(m => m.name).join(', ');
+            const db = await dbP(); const list = await new Promise(r => { const req = db.transaction('meds').objectStore('meds').getAll(); req.onsuccess = () => r(req.result); });
+            document.getElementById('qr-summary').textContent = "Meds: " + list.map(m => m.name).join(', ');
             document.getElementById("qrcode").innerHTML = "";
-            new QRCode(document.getElementById("qrcode"), { text: JSON.stringify(list.map(m => m.name)), width: 280, height: 280 });
+            new QRCode(document.getElementById("qrcode"), { text: JSON.stringify(list.map(m => m.name)), width: 250, height: 250 });
         }
 
         window.onload = () => {

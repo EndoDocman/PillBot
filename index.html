@@ -5,192 +5,388 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>PillBot</title>
     <link rel="manifest" href="manifest.json">
-    <!-- Local fallback script path planned for future; using SRI for now -->
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     <style>
-        :root { --blue: #2563eb; --green: #10b981; --red: #dc2626; --bg: #f8fafc; --text: #1e293b; --slate: #64748b; }
-        body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg); margin: 0; padding: 15px; color: var(--text); -webkit-tap-highlight-color: transparent; }
-        .container { max-width: 450px; margin: 0 auto; }
-        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        h1 { font-size: 1.8rem; color: var(--blue); margin: 0; font-weight: 800; }
-        .btn-install { background: var(--green); color: white; border: none; padding: 8px 12px; border-radius: 10px; font-size: 0.9rem; font-weight: 700; cursor: pointer; }
-        .card { background: white; border-radius: 24px; padding: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 15px; position: relative; }
-        label { display: block; font-size: 0.85rem; font-weight: 700; margin-bottom: 6px; color: var(--slate); text-transform: uppercase; letter-spacing: 0.5px; }
-        
-        /* Optimized Inputs */
-        input[type="text"], input[type="number"], select { 
-            width: 100%; font-size: 1.1rem; padding: 14px; border: 2px solid #e2e8f0; border-radius: 14px; 
-            box-sizing: border-box; background: #f8fafc; margin-bottom: 15px; transition: border-color 0.2s;
+        :root {
+            /* Light Theme Defaults */
+            --bg: #f1f5f9;
+            --card: #ffffff;
+            --text: #1e293b;
+            --subtext: #64748b;
+            --border: #e2e8f0;
+            --blue: #2563eb;
+            --green: #10b981;
+            --red: #ef4444;
+            --yellow-zone: #fef9c3;
+            --orange-zone: #ffedd5;
+            --blue-zone: #dbeafe;
         }
-        input:focus { border-color: var(--blue); outline: none; background: white; }
 
-        /* Autocomplete Styling */
+        [data-theme="dark"] {
+            --bg: #0f172a;
+            --card: #1e293b;
+            --text: #f8fafc;
+            --subtext: #94a3b8;
+            --border: #334155;
+            --blue: #3b82f6;
+            --green: #22c55e;
+            --red: #f87171;
+            --yellow-zone: #422006;
+            --orange-zone: #431407;
+            --blue-zone: #172554;
+        }
+
+        body {
+            font-family: -apple-system, system-ui, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 15px;
+            transition: background 0.3s, color 0.3s;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .container { max-width: 500px; margin: 0 auto; padding-bottom: 80px; }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        h1 { font-size: 1.8rem; color: var(--blue); margin: 0; font-weight: 900; }
+
+        .header-actions { display: flex; gap: 10px; }
+
+        .icon-btn {
+            background: var(--card);
+            border: 2px solid var(--border);
+            color: var(--text);
+            padding: 10px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* DASHBOARD CARDS */
+        .med-card {
+            background: var(--card);
+            border-radius: 24px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+            border: 1px solid var(--border);
+            position: relative;
+        }
+
+        .med-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+        .med-name { font-size: 1.4rem; font-weight: 800; color: var(--blue); }
+        .stock-indicator { font-size: 0.9rem; font-weight: 700; color: var(--subtext); margin-top: 5px; }
+
+        .take-btn {
+            background: var(--green);
+            color: white;
+            border: none;
+            width: 100%;
+            padding: 15px;
+            border-radius: 16px;
+            font-size: 1.2rem;
+            font-weight: 800;
+            margin-top: 15px;
+            cursor: pointer;
+        }
+
+        /* FORM STYLING */
+        .view { display: none; }
+        .view.active { display: block; }
+
+        .form-group { margin-bottom: 15px; position: relative; }
+        label { display: block; font-size: 0.85rem; font-weight: 700; color: var(--subtext); text-transform: uppercase; margin-bottom: 8px; }
+        
+        input[type="text"], input[type="number"], select {
+            width: 100%; font-size: 1.2rem; padding: 14px; border: 2px solid var(--border);
+            border-radius: 16px; box-sizing: border-box; background: var(--bg); color: var(--text);
+        }
+
+        .dose-row {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 15px; border-radius: 18px; margin-bottom: 10px; border: 2px solid var(--border);
+        }
+        .dose-row.active { border-color: var(--blue); }
+        .morning { background: var(--yellow-zone); }
+        .afternoon { background: var(--orange-zone); }
+        .night { background: var(--blue-zone); }
+
+        /* FLOATING ACTION BUTTON */
+        .fab {
+            position: fixed; bottom: 30px; right: 30px;
+            background: var(--blue); color: white;
+            width: 70px; height: 70px; border-radius: 35px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2.5rem; border: none; box-shadow: 0 10px 20px rgba(59, 130, 246, 0.4);
+            cursor: pointer; z-index: 100;
+        }
+
+        /* TOAST */
+        #toast {
+            position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%);
+            background: var(--text); color: var(--card);
+            padding: 12px 25px; border-radius: 30px; font-weight: 700;
+            display: none; z-index: 1000; box-shadow: 0 10px 15px rgba(0,0,0,0.2);
+        }
+
+        /* AUTOCOMPLETE */
         .autocomplete-items {
-            position: absolute; border: 2px solid #e2e8f0; border-top: none; z-index: 99;
-            top: 85px; left: 20px; right: 20px; border-radius: 0 0 14px 14px; background: white;
-            max-height: 200px; overflow-y: auto; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+            position: absolute; border: 1px solid var(--border); z-index: 99;
+            top: 75px; left: 0; right: 0; background: var(--card); border-radius: 14px;
+            max-height: 150px; overflow-y: auto;
         }
-        .autocomplete-items div { padding: 12px; cursor: pointer; border-bottom: 1px solid #f1f5f9; font-weight: 500; }
-        .autocomplete-items div:hover { background-color: #eff6ff; color: var(--blue); }
+        .autocomplete-items div { padding: 12px; cursor: pointer; border-bottom: 1px solid var(--border); }
 
-        .dose-row { display: flex; align-items: center; justify-content: space-between; padding: 12px; border-radius: 14px; background: #f8fafc; border: 1.5px solid #e2e8f0; margin-bottom: 8px; flex-wrap: wrap; }
-        .dose-row.active { border-color: var(--blue); background: #eff6ff; }
-        .dose-info { display: flex; align-items: center; gap: 10px; font-size: 1.1rem; font-weight: 700; }
-        input[type="checkbox"] { width: 26px; height: 28px; accent-color: var(--blue); cursor: pointer; }
-        input[type="time"], .day-select { font-size: 1rem; padding: 6px; border-radius: 8px; border: 1px solid #cbd5e1; display: none; margin-left: auto; background: white; }
-        
-        .btn-main { width: 100%; padding: 18px; font-size: 1.3rem; font-weight: 800; border: none; border-radius: 16px; cursor: pointer; margin-top: 10px; transition: 0.1s; }
-        .btn-main:active { transform: scale(0.98); }
-        .btn-blue { background: var(--blue); color: white; }
-        .btn-emerald { background: var(--green); color: white; }
-        
-        .status-badge { text-align: center; padding: 18px; border-radius: 16px; font-size: 1.1rem; font-weight: 800; background: #e2e8f0; margin-top: 10px; }
-        .status-low { background: #fee2e2; color: var(--red); border: 2px solid var(--red); }
-
-        /* Installation Modal */
-        .modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:999; justify-content:center; align-items:center; }
-        .modal-content { background:white; padding:30px; border-radius:30px; width:85%; max-width: 400px; text-align:center; }
-        
-        #qr-view { display: none; text-align: center; }
-        #qrcode { margin: 20px 0; display: inline-block; padding: 15px; background: white; border-radius: 20px; border: 1px solid #e2e8f0; }
+        #qrcode { background: white; padding: 15px; border-radius: 20px; display: inline-block; margin-top: 15px; }
     </style>
 </head>
-<body>
-    <div class="container" id="main-view">
-        <header>
-            <h1>💊 PillBot</h1>
-            <button class="btn-install" onclick="toggleModal('installModal', true)">📲 Install</button>
-        </header>
-        <div class="card">
-            <div class="form-group" style="position:relative">
-                <label>Medicine Name</label>
-                <input type="text" id="name" placeholder="Start typing..." autocomplete="off">
-                <div id="autocomplete-list" class="autocomplete-items"></div>
+<body data-theme="light">
+
+    <div class="container">
+        <!-- Dashboard View -->
+        <div id="view-dashboard" class="view active">
+            <header>
+                <h1>💊 PillBot</h1>
+                <div class="header-actions">
+                    <button class="icon-btn" onclick="toggleTheme()" title="Toggle Theme">🌓</button>
+                    <button class="icon-btn" onclick="showView('view-qr')" title="Emergency ID">🆔</button>
+                </div>
+            </header>
+            <div id="med-list">
+                <!-- Med cards will appear here -->
             </div>
-            <div class="form-group"><label>Stock Count (Pills)</label><input type="number" id="stock" placeholder="Total in box"></div>
-            <label>Daily Schedule</label>
-            <div class="dose-row" id="row-m"><div class="dose-info"><input type="checkbox" id="m" onchange="toggleRow('m','tm')"><span>☀️ Morning</span></div><input type="time" id="tm" value="08:00"></div>
-            <div class="dose-row" id="row-a"><div class="dose-info"><input type="checkbox" id="a" onchange="toggleRow('a','ta')"><span>🌤️ Afternoon</span></div><input type="time" id="ta" value="13:00"></div>
-            <div class="dose-row" id="row-n"><div class="dose-info"><input type="checkbox" id="n" onchange="toggleRow('n','tn')"><span>🌙 Night</span></div><input type="time" id="tn" value="21:00"></div>
-            <div class="dose-row" id="row-w"><div class="dose-info"><input type="checkbox" id="w" onchange="toggleRow('w','tw','day-w')"><span>📅 Weekly</span></div>
-                <select id="day-w" class="day-select"><option>Monday</option><option>Tuesday</option><option>Wednesday</option><option>Thursday</option><option>Friday</option><option>Saturday</option><option>Sunday</option></select>
-                <input type="time" id="tw" value="09:00">
-            </div>
-            <button class="btn-main btn-blue" onclick="saveData()">✅ SAVE RECORDS</button>
-            <button class="btn-main btn-emerald" onclick="showEmergencyQR()">🆔 MEDICAL ID</button>
+            <button class="fab" onclick="prepareNewMed()">+</button>
         </div>
-        <div id="stats"></div>
+
+        <!-- Add/Edit View -->
+        <div id="view-edit" class="view">
+            <header>
+                <h1 id="form-title">Add Medicine</h1>
+                <button class="icon-btn" onclick="showView('view-dashboard')">✖️</button>
+            </header>
+            <div class="card">
+                <div class="form-group">
+                    <label>Medicine Name</label>
+                    <input type="text" id="name" placeholder="Start typing..." autocomplete="off">
+                    <div id="autocomplete-list" class="autocomplete-items"></div>
+                </div>
+                <div class="form-group">
+                    <label>Pills in Box</label>
+                    <input type="number" id="stock" placeholder="e.g. 30">
+                </div>
+                <label>Schedule</label>
+                <div id="schedule-container">
+                    <div class="dose-row morning" id="row-m">
+                        <div style="display:flex; align-items:center; gap:10px; font-weight:700;">
+                            <input type="checkbox" id="m" style="width:30px;height:30px" onchange="toggleRow('m','tm')"> ☀️ Morning
+                        </div>
+                        <input type="time" id="tm" style="font-size:1.2rem; display:none" value="08:00">
+                    </div>
+                    <div class="dose-row afternoon" id="row-a">
+                        <div style="display:flex; align-items:center; gap:10px; font-weight:700;">
+                            <input type="checkbox" id="a" style="width:30px;height:30px" onchange="toggleRow('a','ta')"> 🌤️ Afternoon
+                        </div>
+                        <input type="time" id="ta" style="font-size:1.2rem; display:none" value="13:00">
+                    </div>
+                    <div class="dose-row night" id="row-n">
+                        <div style="display:flex; align-items:center; gap:10px; font-weight:700;">
+                            <input type="checkbox" id="n" style="width:30px;height:30px" onchange="toggleRow('n','tn')"> 🌙 Night
+                        </div>
+                        <input type="time" id="tn" style="font-size:1.2rem; display:none" value="21:00">
+                    </div>
+                </div>
+                <button class="take-btn" style="background:var(--blue)" onclick="saveMed()">✅ SECURE RECORDS</button>
+            </div>
+        </div>
+
+        <!-- Emergency View -->
+        <div id="view-qr" class="view">
+            <header>
+                <h1>🚨 Medical ID</h1>
+                <button class="icon-btn" onclick="showView('view-dashboard')">✖️</button>
+            </header>
+            <div class="card" style="text-align:center">
+                <div id="qr-summary" style="text-align:left; font-size:1.1rem; margin-bottom:15px; border-left:5px solid var(--red); padding-left:15px;"></div>
+                <div id="qrcode"></div>
+                <p style="color:var(--red); font-weight:800; margin-top:15px;">SCAN FOR EMERGENCY INFO</p>
+            </div>
+        </div>
     </div>
 
-    <!-- Modals -->
-    <div id="installModal" class="modal" onclick="toggleModal('installModal', false)">
-        <div class="modal-content" onclick="event.stopPropagation()">
-            <h2 style="color:var(--blue)">Setup App</h2>
-            <p style="font-size:1.05rem; line-height:1.6; text-align: left; margin: 20px 0;">
-                <b>For iPad/iPhone:</b><br>1. Tap the Share icon (square with arrow)<br>2. Select 'Add to Home Screen'.<br><br>
-                <b>For Android:</b><br>1. Tap the 3 dots in Chrome<br>2. Select 'Install app'.
-            </p>
-            <button class="btn-main btn-blue" onclick="toggleModal('installModal', false)">GOT IT</button>
-        </div>
-    </div>
-
-    <div class="container" id="qr-view">
-        <div class="card">
-            <h1 style="color:var(--red); font-size:1.6rem">🚨 EMERGENCY MEDICAL ID</h1>
-            <div id="qr-summary" style="font-size:1.2rem; text-align:left; margin: 20px 0; border-left:5px solid var(--red); padding-left:15px; background: #fff1f2; padding: 15px; border-radius: 0 15px 15px 0;"></div>
-            <div id="qrcode"></div>
-            <button class="btn-main" style="background:var(--slate); color:white" onclick="location.reload()">⬅️ BACK</button>
-        </div>
-    </div>
+    <div id="toast"></div>
 
     <script>
-        const COMMON_MEDS = ["Metformin", "Levothyroxine", "Atorvastatin", "Amlodipine", "Lisinopril", "Glimepiride", "Vildagliptin", "Sitagliptin", "Gliclazide", "Ramipril", "Losartan", "Pantoprazole", "Telmisartan", "Thyronorm", "Januvia", "Galvus", "Glycomet"];
-        
+        const COMMON_MEDS = ["Metformin", "Levothyroxine", "Atorvastatin", "Amlodipine", "Lisinopril", "Glimepiride", "Vildagliptin", "Sitagliptin", "Gliclazide", "Telmisartan", "Thyronorm"];
+        let currentEditId = null;
+
         if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
 
-        // Security: Safer UI Update using textContent
-        function updateText(id, text) { document.getElementById(id).textContent = text; }
-        function toggleModal(id, show) { document.getElementById(id).style.display = show ? 'flex' : 'none'; }
-        
-        function toggleRow(c, t, d) {
-            const ck = document.getElementById(c).checked;
-            document.getElementById(t).style.display = ck ? 'block' : 'none';
-            if(d) document.getElementById(d).style.display = ck ? 'block' : 'none';
-            document.getElementById('row-' + c).classList.toggle('active', ck);
-            if(ck && window.navigator.vibrate) window.navigator.vibrate(20);
+        function toggleTheme() {
+            const body = document.body;
+            const newTheme = body.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+            body.setAttribute('data-theme', newTheme);
+            localStorage.setItem('pillbot-theme', newTheme);
         }
 
-        // Autocomplete Logic
-        const nameInput = document.getElementById('name');
-        const listContainer = document.getElementById('autocomplete-list');
+        function showView(id) {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            if(id === 'view-qr') renderQR();
+        }
 
-        nameInput.oninput = function() {
+        function toggleRow(c, t) {
+            const ck = document.getElementById(c).checked;
+            document.getElementById(t).style.display = ck ? 'block' : 'none';
+            document.getElementById('row-' + c).classList.toggle('active', ck);
+        }
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.textContent = msg; t.style.display = 'block';
+            setTimeout(() => t.style.display = 'none', 3000);
+            if(window.navigator.vibrate) window.navigator.vibrate(50);
+        }
+
+        // AUTOCOMPLETE
+        const nameIn = document.getElementById('name');
+        nameIn.oninput = function() {
             const val = this.value;
-            listContainer.innerHTML = '';
-            if (!val) return false;
+            const list = document.getElementById('autocomplete-list');
+            list.innerHTML = '';
+            if(!val) return;
             COMMON_MEDS.forEach(med => {
-                if (med.substr(0, val.length).toLowerCase() == val.toLowerCase()) {
-                    const b = document.createElement("DIV");
-                    b.innerHTML = "<strong>" + med.substr(0, val.length) + "</strong>" + med.substr(val.length);
-                    b.onclick = () => { nameInput.value = med; listContainer.innerHTML = ''; };
-                    listContainer.appendChild(b);
+                if(med.toLowerCase().startsWith(val.toLowerCase())) {
+                    const d = document.createElement("DIV");
+                    d.textContent = med;
+                    d.onclick = () => { nameIn.value = med; list.innerHTML = ''; };
+                    list.appendChild(d);
                 }
             });
         };
 
-        // Storage & Integrity
+        // DATABASE
         const dbP = () => new Promise(res => {
-            const req = indexedDB.open('PillBotDB', 1);
-            req.onupgradeneeded = e => e.target.result.createObjectStore('meds');
+            const req = indexedDB.open('PillBotMultiDB', 1);
+            req.onupgradeneeded = e => e.target.result.createObjectStore('meds', { keyPath: 'id' });
             req.onsuccess = e => res(e.target.result);
         });
 
-        async function saveData() {
-            const data = {
-                name: nameInput.value,
-                stock: parseInt(document.getElementById('stock').value)||0,
-                m: document.getElementById('m').checked, a: document.getElementById('a').checked,
-                n: document.getElementById('n').checked, w: document.getElementById('w').checked,
-                tm: document.getElementById('tm').value, ta: document.getElementById('ta').value,
-                tn: document.getElementById('tn').value, tw: document.getElementById('tw').value,
-                day: document.getElementById('day-w').value,
-                ts: new Date().toISOString(), hash: "SEC_" + Math.random().toString(36).substr(2, 9)
+        function prepareNewMed() {
+            currentEditId = null;
+            document.getElementById('form-title').textContent = "Add Medicine";
+            document.getElementById('name').value = '';
+            document.getElementById('stock').value = '';
+            ['m','a','n'].forEach(c => { document.getElementById(c).checked = false; toggleRow(c, 't'+c); });
+            showView('view-edit');
+        }
+
+        async function saveMed() {
+            const name = document.getElementById('name').value;
+            if(!name) return showToast("Enter medicine name");
+            const med = {
+                id: currentEditId || "ID_" + Date.now(),
+                name: name,
+                stock: parseInt(document.getElementById('stock').value) || 0,
+                m: document.getElementById('m').checked, a: document.getElementById('a').checked, n: document.getElementById('n').checked,
+                tm: document.getElementById('tm').value, ta: document.getElementById('ta').value, tn: document.getElementById('tn').value,
+                ts: new Date().toISOString()
             };
-            const db = await dbP(); await db.transaction('meds','readwrite').objectStore('meds').put(data, 'c');
-            if(window.navigator.vibrate) window.navigator.vibrate([30, 50, 30]);
-            alert("Prescription Secured ✅"); renderStats();
+            const db = await dbP();
+            await db.transaction('meds','readwrite').objectStore('meds').put(med);
+            showToast("Saved Safely ✅");
+            showView('view-dashboard');
+            renderList();
         }
 
-        async function renderStats() {
-            const db = await dbP(); 
-            const data = await new Promise(r => { const req = db.transaction('meds').objectStore('meds').get('c'); req.onsuccess = () => r(req.result); });
-            if (!data) return;
-            const dly = (data.m?1:0)+(data.a?1:0)+(data.n?1:0) + (data.w?0.14:0);
-            const days = dly > 0 ? Math.floor(data.stock/dly) : 0;
-            const stats = document.getElementById('stats');
-            stats.className = `status-badge ${days < 5 ? 'status-low' : ''}`;
-            stats.textContent = `STOCK: ${data.stock} Pills (~${days} Days Remaining)`;
-        }
-
-        async function showEmergencyQR() {
-            const db = await dbP(); 
-            const data = await new Promise(r => { const req = db.transaction('meds').objectStore('meds').get('c'); req.onsuccess = () => r(req.result); });
-            if (!data) return;
-            document.getElementById('main-view').style.display = 'none';
-            document.getElementById('qr-view').style.display = 'block';
+        async function renderList() {
+            const db = await dbP();
+            const list = await new Promise(r => {
+                const req = db.transaction('meds').objectStore('meds').getAll();
+                req.onsuccess = () => r(req.result);
+            });
+            const container = document.getElementById('med-list');
+            container.innerHTML = '';
+            if(list.length === 0) container.innerHTML = '<p style="text-align:center;color:var(--subtext)">No medications yet. Tap + to add.</p>';
             
-            const summary = document.getElementById('qr-summary');
-            summary.innerHTML = ""; // Clear
-            const bMed = document.createElement("b"); bMed.textContent = "MEDICINE: "; summary.appendChild(bMed);
-            summary.appendChild(document.createTextNode(data.name));
-            summary.appendChild(document.createElement("br"));
-            const bFreq = document.createElement("b"); bFreq.textContent = "FREQ: "; summary.appendChild(bFreq);
-            summary.appendChild(document.createTextNode(`${data.m?'M ':''}${data.a?'A ':''}${data.n?'N ':''}${data.w?'Weekly('+data.day+')':''}`));
-
-            document.getElementById("qrcode").innerHTML = "";
-            new QRCode(document.getElementById("qrcode"), { text: JSON.stringify({n: data.name, s: data.ts, h: data.hash}), width: 280, height: 280 });
+            list.forEach(med => {
+                const daily = (med.m?1:0) + (med.a?1:0) + (med.n?1:0);
+                const days = daily > 0 ? Math.floor(med.stock/daily) : "—";
+                const div = document.createElement('div');
+                div.className = 'med-card';
+                div.innerHTML = `
+                    <div class="med-header">
+                        <div>
+                            <div class="med-name">${med.name}</div>
+                            <div class="stock-indicator">${med.stock} pills remaining (~${days} days)</div>
+                        </div>
+                        <button class="icon-btn" onclick="editMed('${med.id}')">⚙️</button>
+                    </div>
+                    <button class="take-btn" onclick="takeDose('${med.id}')">I TOOK MY DOSE</button>
+                `;
+                container.appendChild(div);
+            });
         }
-        window.onload = renderStats;
+
+        async function editMed(id) {
+            const db = await dbP();
+            const med = await new Promise(r => {
+                const req = db.transaction('meds').objectStore('meds').get(id);
+                req.onsuccess = () => r(req.result);
+            });
+            currentEditId = id;
+            document.getElementById('form-title').textContent = "Edit Medicine";
+            document.getElementById('name').value = med.name;
+            document.getElementById('stock').value = med.stock;
+            ['m','a','n'].forEach(c => { 
+                document.getElementById(c).checked = med[c]; 
+                document.getElementById('t'+c).value = med['t'+c];
+                toggleRow(c, 't'+c);
+            });
+            showView('view-edit');
+        }
+
+        async function takeDose(id) {
+            const db = await dbP();
+            const tx = db.transaction('meds', 'readwrite');
+            const store = tx.objectStore('meds');
+            const med = await new Promise(r => {
+                const req = store.get(id); req.onsuccess = () => r(req.result);
+            });
+            if(med.stock > 0) {
+                med.stock -= 1;
+                await store.put(med);
+                showToast("Dose logged! Stock updated.");
+                renderList();
+            }
+        }
+
+        async function renderQR() {
+            const db = await dbP();
+            const list = await new Promise(r => {
+                const req = db.transaction('meds').objectStore('meds').getAll();
+                req.onsuccess = () => r(req.result);
+            });
+            const summary = document.getElementById('qr-summary');
+            summary.textContent = "CURRENT MEDICATIONS:\n" + list.map(m => `- ${m.name}`).join('\n');
+            document.getElementById("qrcode").innerHTML = "";
+            new QRCode(document.getElementById("qrcode"), { text: JSON.stringify(list.map(m => ({n:m.name, s:m.stock}))), width: 280, height: 280 });
+        }
+
+        window.onload = () => {
+            const savedTheme = localStorage.getItem('pillbot-theme') || 'light';
+            document.body.setAttribute('data-theme', savedTheme);
+            renderList();
+        };
     </script>
 </body>
 </html>

@@ -2,91 +2,104 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>PillBot</title>
     <link rel="manifest" href="manifest.json">
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     <style>
-        :root { --blue: #2563eb; --green: #10b981; --red: #dc2626; --bg: #f8fafc; }
-        body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg); margin: 0; padding: 15px; color: #1e293b; -webkit-tap-highlight-color: transparent; }
-        .container { max-width: 500px; margin: 0 auto; }
+        :root { --blue: #2563eb; --green: #10b981; --red: #dc2626; --bg: #f8fafc; --text: #1e293b; }
+        body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg); margin: 0; padding: 15px; color: var(--text); -webkit-tap-highlight-color: transparent; }
+        .container { max-width: 450px; margin: 0 auto; }
         header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        h1 { font-size: 1.6rem; color: var(--blue); margin: 0; font-weight: 800; }
-        .btn-install { background: var(--green); color: white; border: none; padding: 8px 14px; border-radius: 10px; font-size: 0.9rem; font-weight: 700; display: none; }
-        .card { background: white; border-radius: 20px; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); margin-bottom: 15px; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; font-size: 0.9rem; font-weight: 700; margin-bottom: 6px; color: #64748b; }
-        input[type="text"], input[type="number"] { width: 100%; font-size: 1.2rem; padding: 12px; border: 2px solid #e2e8f0; border-radius: 12px; box-sizing: border-box; background: #f8fafc; }
-        .dose-grid { display: grid; gap: 10px; margin-top: 10px; }
-        .dose-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 15px; border-radius: 14px; background: #f8fafc; border: 1.5px solid #e2e8f0; }
+        h1 { font-size: 1.8rem; color: var(--blue); margin: 0; font-weight: 800; }
+        .btn-install { background: var(--green); color: white; border: none; padding: 8px 12px; border-radius: 10px; font-size: 0.9rem; font-weight: 700; cursor: pointer; }
+        .card { background: white; border-radius: 20px; padding: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 15px; }
+        label { display: block; font-size: 0.9rem; font-weight: 700; margin-bottom: 8px; color: #64748b; text-transform: uppercase; }
+        input[type="text"], input[type="number"], select { width: 100%; font-size: 1.1rem; padding: 12px; border: 2px solid #e2e8f0; border-radius: 12px; box-sizing: border-box; background: #f8fafc; margin-bottom: 15px; }
+        .dose-row { display: flex; align-items: center; justify-content: space-between; padding: 12px; border-radius: 12px; background: #f8fafc; border: 1.5px solid #e2e8f0; margin-bottom: 10px; flex-wrap: wrap; }
         .dose-row.active { border-color: var(--blue); background: #eff6ff; }
-        .dose-info { display: flex; align-items: center; gap: 12px; font-size: 1.1rem; font-weight: 700; }
+        .dose-info { display: flex; align-items: center; gap: 10px; font-size: 1.1rem; font-weight: 700; }
         input[type="checkbox"] { width: 28px; height: 28px; accent-color: var(--blue); margin: 0; }
-        input[type="time"] { font-size: 1.1rem; padding: 4px; border-radius: 8px; border: 1px solid #cbd5e1; display: none; }
+        input[type="time"], .day-select { font-size: 1rem; padding: 5px; border-radius: 8px; border: 1px solid #cbd5e1; display: none; margin-left: auto; }
         .btn-main { width: 100%; padding: 16px; font-size: 1.2rem; font-weight: 800; border: none; border-radius: 14px; cursor: pointer; margin-top: 10px; }
         .btn-blue { background: var(--blue); color: white; }
         .btn-emerald { background: var(--green); color: white; }
-        .status-badge { text-align: center; padding: 15px; border-radius: 14px; font-size: 1.1rem; font-weight: 800; background: #e2e8f0; }
-        .status-low { background: #fee2e2; color: var(--red); border: 1.5px solid var(--red); }
+        .status-badge { text-align: center; padding: 15px; border-radius: 14px; font-size: 1.1rem; font-weight: 800; background: #e2e8f0; margin-top: 10px; }
+        /* Modal */
+        .modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:999; justify-content:center; align-items:center; }
+        .modal-content { background:white; padding:30px; border-radius:25px; width:85%; text-align:center; }
         #qr-view { display: none; text-align: center; }
-        #qrcode { margin-top: 20px; border: 1px solid #eee; padding: 10px; background: white; display: inline-block; border-radius: 15px; }
     </style>
 </head>
 <body>
     <div class="container" id="main-view">
         <header>
             <h1>💊 PillBot</h1>
-            <button id="install-btn" class="btn-install" onclick="triggerInstall()">📲 Install</button>
+            <button class="btn-install" onclick="showInstallInfo()">📲 Install</button>
         </header>
         <div class="card">
-            <div class="form-group"><label>Medicine Name</label><input type="text" id="name" placeholder="e.g. Levothyroxine"></div>
-            <div class="form-group"><label>Stock (Pills)</label><input type="number" id="stock" placeholder="30"></div>
+            <label>Medicine</label><input type="text" id="name" placeholder="e.g. Levothyroxine">
+            <label>Stock Count</label><input type="number" id="stock" placeholder="30">
             <label>Schedule</label>
-            <div class="dose-grid">
-                <div class="dose-row" id="row-m"><div class="dose-info"><input type="checkbox" id="m" onchange="h('m','tm')"><span>☀️ Morning</span></div><input type="time" id="tm" value="08:00"></div>
-                <div class="dose-row" id="row-a"><div class="dose-info"><input type="checkbox" id="a" onchange="h('a','ta')"><span>🌤️ Afternoon</span></div><input type="time" id="ta" value="13:00"></div>
-                <div class="dose-row" id="row-n"><div class="dose-info"><input type="checkbox" id="n" onchange="h('n','tn')"><span>🌙 Night</span></div><input type="time" id="tn" value="21:00"></div>
+            <div class="dose-row" id="row-m"><div class="dose-info"><input type="checkbox" id="m" onchange="h('m','tm')"><span>☀️ Morning</span></div><input type="time" id="tm" value="08:00"></div>
+            <div class="dose-row" id="row-a"><div class="dose-info"><input type="checkbox" id="a" onchange="h('a','ta')"><span>🌤️ Afternoon</span></div><input type="time" id="ta" value="13:00"></div>
+            <div class="dose-row" id="row-n"><div class="dose-info"><input type="checkbox" id="n" onchange="h('n','tn')"><span>🌙 Night</span></div><input type="time" id="tn" value="21:00"></div>
+            <div class="dose-row" id="row-w"><div class="dose-info"><input type="checkbox" id="w" onchange="h('w','tw','day-w')"><span>📅 Weekly</span></div>
+                <select id="day-w" class="day-select"><option>Monday</option><option>Tuesday</option><option>Wednesday</option><option>Thursday</option><option>Friday</option><option>Saturday</option><option>Sunday</option></select>
+                <input type="time" id="tw" value="09:00">
             </div>
-            <button class="btn-main btn-blue" onclick="save()">✅ SAVE</button>
+            <button class="btn-main btn-blue" onclick="save()">✅ SAVE PRESCRIPTION</button>
             <button class="btn-main btn-emerald" onclick="showQR()">🆔 MEDICAL ID</button>
         </div>
         <div id="stats"></div>
     </div>
+
+    <!-- Install Guide -->
+    <div id="installModal" class="modal" onclick="this.style.display='none'">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <h2 style="color:var(--blue)">How to Install</h2>
+            <p style="font-size:1.1rem; margin:20px 0"><b>On iPhone/iPad:</b><br>Tap the 'Share' icon (square with arrow) at the bottom, then scroll down and tap 'Add to Home Screen'.</p>
+            <p style="font-size:1.1rem"><b>On Android:</b><br>Tap the 'three dots' menu in Chrome, then tap 'Install app'.</p>
+            <button class="btn-main btn-blue" onclick="document.getElementById('installModal').style.display='none'">GOT IT</button>
+        </div>
+    </div>
+
     <div class="container" id="qr-view">
         <div class="card">
             <h1 style="color:var(--red); font-size:1.5rem">🚨 EMERGENCY ID</h1>
-            <div id="qr-sum" style="font-size:1.1rem; text-align:left; margin: 15px 0; border-left:4px solid var(--red); padding-left:10px"></div>
+            <div id="qr-sum" style="font-size:1.1rem; text-align:left; margin:15px 0; border-left:4px solid var(--red); padding-left:10px"></div>
             <div id="qrcode"></div>
             <button class="btn-main" style="background:#64748b; color:white" onclick="location.reload()">⬅️ BACK</button>
         </div>
     </div>
+
     <script>
         if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
-        function h(cId, tId) {
-            const ck = document.getElementById(cId).checked;
-            document.getElementById(tId).style.display = ck ? 'block' : 'none';
-            document.getElementById('row-' + cId).classList.toggle('active', ck);
+        function h(c, t, d) {
+            const ck = document.getElementById(c).checked;
+            document.getElementById(t).style.display = ck ? 'block' : 'none';
+            if(d) document.getElementById(d).style.display = ck ? 'block' : 'none';
+            document.getElementById('row-' + c).classList.toggle('active', ck);
         }
-        let defP;
-        window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); defP = e; document.getElementById('install-btn').style.display = 'block'; });
-        async function triggerInstall() { if (defP) { defP.prompt(); const { outcome } = await defP.userChoice; if (outcome === 'accepted') document.getElementById('install-btn').style.display = 'none'; defP = null; } else { alert("iPhone: Tap 'Share' > 'Add to Home Screen'"); } }
+        function showInstallInfo() { document.getElementById('installModal').style.display = 'flex'; }
         const dbP = () => new Promise(res => { const req = indexedDB.open('PillBotDB', 1); req.onupgradeneeded = e => e.target.result.createObjectStore('meds'); req.onsuccess = e => res(e.target.result); });
         async function save() {
-            const data = { name: document.getElementById('name').value, stock: parseInt(document.getElementById('stock').value)||0, m: document.getElementById('m').checked, a: document.getElementById('a').checked, n: document.getElementById('n').checked, tm: document.getElementById('tm').value, ta: document.getElementById('ta').value, tn: document.getElementById('tn').value, ts: new Date().toISOString(), h: "B_" + Date.now() };
+            const data = { name: document.getElementById('name').value, stock: parseInt(document.getElementById('stock').value)||0, m: document.getElementById('m').checked, a: document.getElementById('a').checked, n: document.getElementById('n').checked, w: document.getElementById('w').checked, tm: document.getElementById('tm').value, ta: document.getElementById('ta').value, tn: document.getElementById('tn').value, tw: document.getElementById('tw').value, day: document.getElementById('day-w').value, ts: new Date().toISOString() };
             const db = await dbP(); await db.transaction('meds','readwrite').objectStore('meds').put(data, 'c');
-            alert("Secured ✅"); render();
+            alert("Prescription Secured ✅"); render();
         }
         async function render() {
             const db = await dbP(); const data = await new Promise(r => { const req = db.transaction('meds').objectStore('meds').get('c'); req.onsuccess = () => r(req.result); });
             if (!data) return;
-            const dly = (data.m?1:0)+(data.a?1:0)+(data.n?1:0); const days = dly > 0 ? Math.floor(data.stock/dly) : 0;
-            document.getElementById('stats').innerHTML = `<div class="status-badge ${days < 5 ? 'status-low' : ''}">STOCK: ${data.stock} (${days} Days Left)</div>`;
+            const dly = (data.m?1:0)+(data.a?1:0)+(data.n?1:0) + (data.w?0.14:0);
+            const days = dly > 0 ? Math.floor(data.stock/dly) : 0;
+            document.getElementById('stats').innerHTML = `<div class="status-badge">STOCK: ${data.stock} Pills (~${days} Days Remaining)</div>`;
         }
         async function showQR() {
             const db = await dbP(); const data = await new Promise(r => { const req = db.transaction('meds').objectStore('meds').get('c'); req.onsuccess = () => r(req.result); });
             if (!data) return;
             document.getElementById('main-view').style.display = 'none'; document.getElementById('qr-view').style.display = 'block';
-            document.getElementById('qr-sum').innerHTML = `<b>MED:</b> ${data.name}<br><b>TIMES:</b> ${data.m?data.tm:''} ${data.a?data.ta:''} ${data.n?data.tn:''}`;
+            document.getElementById('qr-sum').innerHTML = `<b>MED:</b> ${data.name}<br><b>FREQ:</b> ${data.m?'M ':''}${data.a?'A ':''}${data.n?'N ':''}${data.w?('Weekly('+data.day+')'):''}`;
             document.getElementById("qrcode").innerHTML = ""; new QRCode(document.getElementById("qrcode"), { text: JSON.stringify(data), width: 250, height: 250 });
         }
         window.onload = render;

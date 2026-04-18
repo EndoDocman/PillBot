@@ -11,59 +11,73 @@
         body { font-family: sans-serif; background: #f4f7f6; padding: 20px; display: flex; flex-direction: column; align-items: center; }
         .card { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); width: 90%; max-width: 800px; margin-bottom: 20px; }
         h1 { font-size: 3rem; color: var(--blue); }
-        button { width: 100%; padding: 30px; font-size: 2.5rem; border: none; border-radius: 15px; cursor: pointer; margin-top: 20px; font-weight: bold; }
+        label { font-size: 1.5rem; font-weight: bold; }
+        input { width: 100%; font-size: 2.2rem; padding: 15px; margin: 10px 0 25px 0; border: 3px solid #ddd; border-radius: 12px; box-sizing: border-box; }
+        .dose { padding: 25px; font-size: 2rem; border-radius: 12px; margin: 12px 0; display: flex; align-items: center; gap: 20px; }
+        button { width: 100%; padding: 30px; font-size: 2.5rem; border: none; border-radius: 18px; cursor: pointer; margin-top: 15px; font-weight: bold; }
         .save { background: var(--blue); color: white; }
+        .id-btn { background: var(--green); color: white; }
         
-        /* GERIATRIC "ONE-CLICK" INSTALLER */
         #install-overlay {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #2563eb; z-index: 10000; flex-direction: column; justify-content: center; align-items: center; color: white;
+            background: var(--blue); z-index: 10000; flex-direction: column; justify-content: center; align-items: center; color: white;
         }
-        .big-btn { background: #10b981; color: white; width: 85%; height: 200px; font-size: 4rem; border-radius: 40px; border: 10px solid white; box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
+        .big-btn { background: var(--green); color: white; width: 85%; height: 200px; font-size: 4rem; border-radius: 40px; border: 8px solid white; }
 
         #main { display: block; }
         #qr-view { display: none; text-align: center; }
-        input { width: 100%; font-size: 2.5rem; padding: 15px; margin: 15px 0 30px 0; border: 4px solid #ddd; border-radius: 15px; }
+        .inv { font-size: 2.2rem; text-align: center; padding: 25px; border-radius: 15px; margin-top: 20px; }
+        .low { background: #fee2e2; color: var(--red); border: 4px solid var(--red); animation: blink 1.5s infinite; }
+        @keyframes blink { 50% { opacity: 0.5; } }
     </style>
 </head>
 <body>
-    <!-- One-Click Installation Overlay -->
     <div id="install-overlay">
-        <h1 style="font-size: 5rem; margin-bottom: 50px;">💊 PILLBOT</h1>
+        <h1 style="font-size: 5rem; margin-bottom: 30px;">💊 PILLBOT</h1>
         <button id="btn-install" class="big-btn">📥 INSTALL NOW</button>
-        <p style="font-size: 2rem; margin-top: 40px;">Tap the button to put PillBot on your Tablet</p>
+        <button onclick="document.getElementById('install-overlay').style.display='none'" style="background:transparent; font-size:1.5rem; color:white; margin-top:20px">Skip</button>
     </div>
 
     <div id="main">
         <h1>💊 PillBot Personal</h1>
         <div class="card">
-            <label style="font-size:2rem">Tablet Name</label>
-            <input type="text" id="name" placeholder="Levothyroxine">
-            <label style="font-size:2rem">Stock Count</label>
+            <label>Tablet Name</label>
+            <input type="text" id="name" placeholder="e.g. Levothyroxine">
+            <label>How many pills in box?</label>
             <input type="number" id="stock" placeholder="30">
-            <button class="save" onclick="save()">SAVE & SECURE</button>
+            
+            <div class="dose" style="background:#fff9db"><input type="checkbox" id="m" style="transform:scale(3.5)"> ☀️ Morning</div>
+            <div class="dose" style="background:#fff4e6"><input type="checkbox" id="a" style="transform:scale(3.5)"> 🌤️ Afternoon</div>
+            <div class="dose" style="background:#ebfbee"><input type="checkbox" id="n" style="transform:scale(3.5)"> 🌙 Night</div>
+
+            <button class="save" onclick="save()">SAVE & ACTIVATE</button>
+            <button class="id-btn" onclick="showQR()">EMERGENCY ID</button>
         </div>
-        <div id="stats" style="font-size: 2.5rem; text-align: center;"></div>
+        <div id="stats"></div>
+    </div>
+
+    <div id="qr-view" class="card">
+        <h1 style="color:var(--red)">🚨 EMERGENCY ID</h1>
+        <div id="sum" style="font-size:2.2rem; margin-bottom:25px; text-align:left"></div>
+        <div id="qrcode" style="display:inline-block; border:12px solid white"></div>
+        <button class="save" onclick="location.reload()">BACK TO DASHBOARD</button>
     </div>
 
     <script>
         if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
 
         let deferredPrompt;
-        const overlay = document.getElementById('install-overlay');
-        const btnInstall = document.getElementById('btn-install');
-
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
-            overlay.style.display = 'flex';
+            document.getElementById('install-overlay').style.display = 'flex';
         });
 
-        btnInstall.addEventListener('click', async () => {
+        document.getElementById('btn-install').addEventListener('click', async () => {
             if (deferredPrompt) {
                 deferredPrompt.prompt();
                 const { outcome } = await deferredPrompt.userChoice;
-                if (outcome === 'accepted') overlay.style.display = 'none';
+                if (outcome === 'accepted') document.getElementById('install-overlay').style.display = 'none';
                 deferredPrompt = null;
             }
         });
@@ -71,16 +85,52 @@
         async function save() {
             const data = { 
                 name: document.getElementById('name').value, 
-                stock: parseInt(document.getElementById('stock').value),
+                stock: parseInt(document.getElementById('stock').value) || 0,
+                m: document.getElementById('m').checked,
+                a: document.getElementById('a').checked,
+                n: document.getElementById('n').checked,
                 hash: "GENESIS", ts: new Date().toISOString()
             };
-            const request = indexedDB.open('PillBotDB', 1);
-            request.onupgradeneeded = e => e.target.result.createObjectStore('meds');
-            request.onsuccess = e => {
-                e.target.result.transaction('meds','readwrite').objectStore('meds').put(data, 'current_med');
-                alert("Medication Secured ✅");
-            };
+            const db = await openDB();
+            await db.transaction('meds','readwrite').objectStore('meds').put(data, 'current_med');
+            alert("Medication Secured in Ledger ✅");
+            render();
         }
+
+        async function render() {
+            const db = await openDB();
+            const data = await new Promise(r => {
+                const req = db.transaction('meds').objectStore('meds').get('current_med');
+                req.onsuccess = () => r(req.result);
+            });
+            if(!data) return;
+            const daily = (data.m?1:0)+(data.a?1:0)+(data.n?1:0);
+            const days = daily > 0 ? Math.floor(data.stock/daily) : 0;
+            document.getElementById('stats').innerHTML = `<div class="inv ${days < 5 ? 'low' : ''}">STOCK: ${data.stock} (${days} days left)</div>`;
+        }
+
+        function openDB() {
+            return new Promise(res => {
+                const req = indexedDB.open('PillBotDB', 1);
+                req.onupgradeneeded = e => e.target.result.createObjectStore('meds');
+                req.onsuccess = e => res(e.target.result);
+            });
+        }
+
+        async function showQR() {
+            const db = await openDB();
+            const data = await new Promise(r => {
+                const req = db.transaction('meds').objectStore('meds').get('current_med');
+                req.onsuccess = () => r(req.result);
+            });
+            if(!data) { alert("Please save meds first!"); return; }
+            document.getElementById('main').style.display='none';
+            document.getElementById('qr-view').style.display='block';
+            document.getElementById('sum').innerHTML = `<b>MED:</b> ${data.name}<br><b>SCHEDULE:</b> ${data.m?'Morning ':''}${data.a?'Afternoon ':''}${data.n?'Night':''}`;
+            document.getElementById("qrcode").innerHTML = "";
+            new QRCode(document.getElementById("qrcode"), { text: JSON.stringify(data), width: 350, height: 350 });
+        }
+        window.onload = render;
     </script>
 </body>
 </html>

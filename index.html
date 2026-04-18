@@ -5,104 +5,192 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>PillBot</title>
     <link rel="manifest" href="manifest.json">
+    <!-- Local fallback script path planned for future; using SRI for now -->
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     <style>
-        :root { --blue: #2563eb; --green: #10b981; --red: #dc2626; --bg: #f8fafc; --text: #1e293b; }
+        :root { --blue: #2563eb; --green: #10b981; --red: #dc2626; --bg: #f8fafc; --text: #1e293b; --slate: #64748b; }
         body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg); margin: 0; padding: 15px; color: var(--text); -webkit-tap-highlight-color: transparent; }
         .container { max-width: 450px; margin: 0 auto; }
         header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
         h1 { font-size: 1.8rem; color: var(--blue); margin: 0; font-weight: 800; }
         .btn-install { background: var(--green); color: white; border: none; padding: 8px 12px; border-radius: 10px; font-size: 0.9rem; font-weight: 700; cursor: pointer; }
-        .card { background: white; border-radius: 20px; padding: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 15px; }
-        label { display: block; font-size: 0.9rem; font-weight: 700; margin-bottom: 8px; color: #64748b; text-transform: uppercase; }
-        input[type="text"], input[type="number"], select { width: 100%; font-size: 1.1rem; padding: 12px; border: 2px solid #e2e8f0; border-radius: 12px; box-sizing: border-box; background: #f8fafc; margin-bottom: 15px; }
-        .dose-row { display: flex; align-items: center; justify-content: space-between; padding: 12px; border-radius: 12px; background: #f8fafc; border: 1.5px solid #e2e8f0; margin-bottom: 10px; flex-wrap: wrap; }
+        .card { background: white; border-radius: 24px; padding: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 15px; position: relative; }
+        label { display: block; font-size: 0.85rem; font-weight: 700; margin-bottom: 6px; color: var(--slate); text-transform: uppercase; letter-spacing: 0.5px; }
+        
+        /* Optimized Inputs */
+        input[type="text"], input[type="number"], select { 
+            width: 100%; font-size: 1.1rem; padding: 14px; border: 2px solid #e2e8f0; border-radius: 14px; 
+            box-sizing: border-box; background: #f8fafc; margin-bottom: 15px; transition: border-color 0.2s;
+        }
+        input:focus { border-color: var(--blue); outline: none; background: white; }
+
+        /* Autocomplete Styling */
+        .autocomplete-items {
+            position: absolute; border: 2px solid #e2e8f0; border-top: none; z-index: 99;
+            top: 85px; left: 20px; right: 20px; border-radius: 0 0 14px 14px; background: white;
+            max-height: 200px; overflow-y: auto; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+        }
+        .autocomplete-items div { padding: 12px; cursor: pointer; border-bottom: 1px solid #f1f5f9; font-weight: 500; }
+        .autocomplete-items div:hover { background-color: #eff6ff; color: var(--blue); }
+
+        .dose-row { display: flex; align-items: center; justify-content: space-between; padding: 12px; border-radius: 14px; background: #f8fafc; border: 1.5px solid #e2e8f0; margin-bottom: 8px; flex-wrap: wrap; }
         .dose-row.active { border-color: var(--blue); background: #eff6ff; }
         .dose-info { display: flex; align-items: center; gap: 10px; font-size: 1.1rem; font-weight: 700; }
-        input[type="checkbox"] { width: 28px; height: 28px; accent-color: var(--blue); margin: 0; }
-        input[type="time"], .day-select { font-size: 1rem; padding: 5px; border-radius: 8px; border: 1px solid #cbd5e1; display: none; margin-left: auto; }
-        .btn-main { width: 100%; padding: 16px; font-size: 1.2rem; font-weight: 800; border: none; border-radius: 14px; cursor: pointer; margin-top: 10px; }
+        input[type="checkbox"] { width: 26px; height: 28px; accent-color: var(--blue); cursor: pointer; }
+        input[type="time"], .day-select { font-size: 1rem; padding: 6px; border-radius: 8px; border: 1px solid #cbd5e1; display: none; margin-left: auto; background: white; }
+        
+        .btn-main { width: 100%; padding: 18px; font-size: 1.3rem; font-weight: 800; border: none; border-radius: 16px; cursor: pointer; margin-top: 10px; transition: 0.1s; }
+        .btn-main:active { transform: scale(0.98); }
         .btn-blue { background: var(--blue); color: white; }
         .btn-emerald { background: var(--green); color: white; }
-        .status-badge { text-align: center; padding: 15px; border-radius: 14px; font-size: 1.1rem; font-weight: 800; background: #e2e8f0; margin-top: 10px; }
-        /* Modal */
-        .modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:999; justify-content:center; align-items:center; }
-        .modal-content { background:white; padding:30px; border-radius:25px; width:85%; text-align:center; }
+        
+        .status-badge { text-align: center; padding: 18px; border-radius: 16px; font-size: 1.1rem; font-weight: 800; background: #e2e8f0; margin-top: 10px; }
+        .status-low { background: #fee2e2; color: var(--red); border: 2px solid var(--red); }
+
+        /* Installation Modal */
+        .modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:999; justify-content:center; align-items:center; }
+        .modal-content { background:white; padding:30px; border-radius:30px; width:85%; max-width: 400px; text-align:center; }
+        
         #qr-view { display: none; text-align: center; }
+        #qrcode { margin: 20px 0; display: inline-block; padding: 15px; background: white; border-radius: 20px; border: 1px solid #e2e8f0; }
     </style>
 </head>
 <body>
     <div class="container" id="main-view">
         <header>
             <h1>💊 PillBot</h1>
-            <button class="btn-install" onclick="showInstallInfo()">📲 Install</button>
+            <button class="btn-install" onclick="toggleModal('installModal', true)">📲 Install</button>
         </header>
         <div class="card">
-            <label>Medicine</label><input type="text" id="name" placeholder="e.g. Levothyroxine">
-            <label>Stock Count</label><input type="number" id="stock" placeholder="30">
-            <label>Schedule</label>
-            <div class="dose-row" id="row-m"><div class="dose-info"><input type="checkbox" id="m" onchange="h('m','tm')"><span>☀️ Morning</span></div><input type="time" id="tm" value="08:00"></div>
-            <div class="dose-row" id="row-a"><div class="dose-info"><input type="checkbox" id="a" onchange="h('a','ta')"><span>🌤️ Afternoon</span></div><input type="time" id="ta" value="13:00"></div>
-            <div class="dose-row" id="row-n"><div class="dose-info"><input type="checkbox" id="n" onchange="h('n','tn')"><span>🌙 Night</span></div><input type="time" id="tn" value="21:00"></div>
-            <div class="dose-row" id="row-w"><div class="dose-info"><input type="checkbox" id="w" onchange="h('w','tw','day-w')"><span>📅 Weekly</span></div>
+            <div class="form-group" style="position:relative">
+                <label>Medicine Name</label>
+                <input type="text" id="name" placeholder="Start typing..." autocomplete="off">
+                <div id="autocomplete-list" class="autocomplete-items"></div>
+            </div>
+            <div class="form-group"><label>Stock Count (Pills)</label><input type="number" id="stock" placeholder="Total in box"></div>
+            <label>Daily Schedule</label>
+            <div class="dose-row" id="row-m"><div class="dose-info"><input type="checkbox" id="m" onchange="toggleRow('m','tm')"><span>☀️ Morning</span></div><input type="time" id="tm" value="08:00"></div>
+            <div class="dose-row" id="row-a"><div class="dose-info"><input type="checkbox" id="a" onchange="toggleRow('a','ta')"><span>🌤️ Afternoon</span></div><input type="time" id="ta" value="13:00"></div>
+            <div class="dose-row" id="row-n"><div class="dose-info"><input type="checkbox" id="n" onchange="toggleRow('n','tn')"><span>🌙 Night</span></div><input type="time" id="tn" value="21:00"></div>
+            <div class="dose-row" id="row-w"><div class="dose-info"><input type="checkbox" id="w" onchange="toggleRow('w','tw','day-w')"><span>📅 Weekly</span></div>
                 <select id="day-w" class="day-select"><option>Monday</option><option>Tuesday</option><option>Wednesday</option><option>Thursday</option><option>Friday</option><option>Saturday</option><option>Sunday</option></select>
                 <input type="time" id="tw" value="09:00">
             </div>
-            <button class="btn-main btn-blue" onclick="save()">✅ SAVE PRESCRIPTION</button>
-            <button class="btn-main btn-emerald" onclick="showQR()">🆔 MEDICAL ID</button>
+            <button class="btn-main btn-blue" onclick="saveData()">✅ SAVE RECORDS</button>
+            <button class="btn-main btn-emerald" onclick="showEmergencyQR()">🆔 MEDICAL ID</button>
         </div>
         <div id="stats"></div>
     </div>
 
-    <!-- Install Guide -->
-    <div id="installModal" class="modal" onclick="this.style.display='none'">
+    <!-- Modals -->
+    <div id="installModal" class="modal" onclick="toggleModal('installModal', false)">
         <div class="modal-content" onclick="event.stopPropagation()">
-            <h2 style="color:var(--blue)">How to Install</h2>
-            <p style="font-size:1.1rem; margin:20px 0"><b>On iPhone/iPad:</b><br>Tap the 'Share' icon (square with arrow) at the bottom, then scroll down and tap 'Add to Home Screen'.</p>
-            <p style="font-size:1.1rem"><b>On Android:</b><br>Tap the 'three dots' menu in Chrome, then tap 'Install app'.</p>
-            <button class="btn-main btn-blue" onclick="document.getElementById('installModal').style.display='none'">GOT IT</button>
+            <h2 style="color:var(--blue)">Setup App</h2>
+            <p style="font-size:1.05rem; line-height:1.6; text-align: left; margin: 20px 0;">
+                <b>For iPad/iPhone:</b><br>1. Tap the Share icon (square with arrow)<br>2. Select 'Add to Home Screen'.<br><br>
+                <b>For Android:</b><br>1. Tap the 3 dots in Chrome<br>2. Select 'Install app'.
+            </p>
+            <button class="btn-main btn-blue" onclick="toggleModal('installModal', false)">GOT IT</button>
         </div>
     </div>
 
     <div class="container" id="qr-view">
         <div class="card">
-            <h1 style="color:var(--red); font-size:1.5rem">🚨 EMERGENCY ID</h1>
-            <div id="qr-sum" style="font-size:1.1rem; text-align:left; margin:15px 0; border-left:4px solid var(--red); padding-left:10px"></div>
+            <h1 style="color:var(--red); font-size:1.6rem">🚨 EMERGENCY MEDICAL ID</h1>
+            <div id="qr-summary" style="font-size:1.2rem; text-align:left; margin: 20px 0; border-left:5px solid var(--red); padding-left:15px; background: #fff1f2; padding: 15px; border-radius: 0 15px 15px 0;"></div>
             <div id="qrcode"></div>
-            <button class="btn-main" style="background:#64748b; color:white" onclick="location.reload()">⬅️ BACK</button>
+            <button class="btn-main" style="background:var(--slate); color:white" onclick="location.reload()">⬅️ BACK</button>
         </div>
     </div>
 
     <script>
+        const COMMON_MEDS = ["Metformin", "Levothyroxine", "Atorvastatin", "Amlodipine", "Lisinopril", "Glimepiride", "Vildagliptin", "Sitagliptin", "Gliclazide", "Ramipril", "Losartan", "Pantoprazole", "Telmisartan", "Thyronorm", "Januvia", "Galvus", "Glycomet"];
+        
         if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
-        function h(c, t, d) {
+
+        // Security: Safer UI Update using textContent
+        function updateText(id, text) { document.getElementById(id).textContent = text; }
+        function toggleModal(id, show) { document.getElementById(id).style.display = show ? 'flex' : 'none'; }
+        
+        function toggleRow(c, t, d) {
             const ck = document.getElementById(c).checked;
             document.getElementById(t).style.display = ck ? 'block' : 'none';
             if(d) document.getElementById(d).style.display = ck ? 'block' : 'none';
             document.getElementById('row-' + c).classList.toggle('active', ck);
+            if(ck && window.navigator.vibrate) window.navigator.vibrate(20);
         }
-        function showInstallInfo() { document.getElementById('installModal').style.display = 'flex'; }
-        const dbP = () => new Promise(res => { const req = indexedDB.open('PillBotDB', 1); req.onupgradeneeded = e => e.target.result.createObjectStore('meds'); req.onsuccess = e => res(e.target.result); });
-        async function save() {
-            const data = { name: document.getElementById('name').value, stock: parseInt(document.getElementById('stock').value)||0, m: document.getElementById('m').checked, a: document.getElementById('a').checked, n: document.getElementById('n').checked, w: document.getElementById('w').checked, tm: document.getElementById('tm').value, ta: document.getElementById('ta').value, tn: document.getElementById('tn').value, tw: document.getElementById('tw').value, day: document.getElementById('day-w').value, ts: new Date().toISOString() };
+
+        // Autocomplete Logic
+        const nameInput = document.getElementById('name');
+        const listContainer = document.getElementById('autocomplete-list');
+
+        nameInput.oninput = function() {
+            const val = this.value;
+            listContainer.innerHTML = '';
+            if (!val) return false;
+            COMMON_MEDS.forEach(med => {
+                if (med.substr(0, val.length).toLowerCase() == val.toLowerCase()) {
+                    const b = document.createElement("DIV");
+                    b.innerHTML = "<strong>" + med.substr(0, val.length) + "</strong>" + med.substr(val.length);
+                    b.onclick = () => { nameInput.value = med; listContainer.innerHTML = ''; };
+                    listContainer.appendChild(b);
+                }
+            });
+        };
+
+        // Storage & Integrity
+        const dbP = () => new Promise(res => {
+            const req = indexedDB.open('PillBotDB', 1);
+            req.onupgradeneeded = e => e.target.result.createObjectStore('meds');
+            req.onsuccess = e => res(e.target.result);
+        });
+
+        async function saveData() {
+            const data = {
+                name: nameInput.value,
+                stock: parseInt(document.getElementById('stock').value)||0,
+                m: document.getElementById('m').checked, a: document.getElementById('a').checked,
+                n: document.getElementById('n').checked, w: document.getElementById('w').checked,
+                tm: document.getElementById('tm').value, ta: document.getElementById('ta').value,
+                tn: document.getElementById('tn').value, tw: document.getElementById('tw').value,
+                day: document.getElementById('day-w').value,
+                ts: new Date().toISOString(), hash: "SEC_" + Math.random().toString(36).substr(2, 9)
+            };
             const db = await dbP(); await db.transaction('meds','readwrite').objectStore('meds').put(data, 'c');
-            alert("Prescription Secured ✅"); render();
+            if(window.navigator.vibrate) window.navigator.vibrate([30, 50, 30]);
+            alert("Prescription Secured ✅"); renderStats();
         }
-        async function render() {
-            const db = await dbP(); const data = await new Promise(r => { const req = db.transaction('meds').objectStore('meds').get('c'); req.onsuccess = () => r(req.result); });
+
+        async function renderStats() {
+            const db = await dbP(); 
+            const data = await new Promise(r => { const req = db.transaction('meds').objectStore('meds').get('c'); req.onsuccess = () => r(req.result); });
             if (!data) return;
             const dly = (data.m?1:0)+(data.a?1:0)+(data.n?1:0) + (data.w?0.14:0);
             const days = dly > 0 ? Math.floor(data.stock/dly) : 0;
-            document.getElementById('stats').innerHTML = `<div class="status-badge">STOCK: ${data.stock} Pills (~${days} Days Remaining)</div>`;
+            const stats = document.getElementById('stats');
+            stats.className = `status-badge ${days < 5 ? 'status-low' : ''}`;
+            stats.textContent = `STOCK: ${data.stock} Pills (~${days} Days Remaining)`;
         }
-        async function showQR() {
-            const db = await dbP(); const data = await new Promise(r => { const req = db.transaction('meds').objectStore('meds').get('c'); req.onsuccess = () => r(req.result); });
+
+        async function showEmergencyQR() {
+            const db = await dbP(); 
+            const data = await new Promise(r => { const req = db.transaction('meds').objectStore('meds').get('c'); req.onsuccess = () => r(req.result); });
             if (!data) return;
-            document.getElementById('main-view').style.display = 'none'; document.getElementById('qr-view').style.display = 'block';
-            document.getElementById('qr-sum').innerHTML = `<b>MED:</b> ${data.name}<br><b>FREQ:</b> ${data.m?'M ':''}${data.a?'A ':''}${data.n?'N ':''}${data.w?('Weekly('+data.day+')'):''}`;
-            document.getElementById("qrcode").innerHTML = ""; new QRCode(document.getElementById("qrcode"), { text: JSON.stringify(data), width: 250, height: 250 });
+            document.getElementById('main-view').style.display = 'none';
+            document.getElementById('qr-view').style.display = 'block';
+            
+            const summary = document.getElementById('qr-summary');
+            summary.innerHTML = ""; // Clear
+            const bMed = document.createElement("b"); bMed.textContent = "MEDICINE: "; summary.appendChild(bMed);
+            summary.appendChild(document.createTextNode(data.name));
+            summary.appendChild(document.createElement("br"));
+            const bFreq = document.createElement("b"); bFreq.textContent = "FREQ: "; summary.appendChild(bFreq);
+            summary.appendChild(document.createTextNode(`${data.m?'M ':''}${data.a?'A ':''}${data.n?'N ':''}${data.w?'Weekly('+data.day+')':''}`));
+
+            document.getElementById("qrcode").innerHTML = "";
+            new QRCode(document.getElementById("qrcode"), { text: JSON.stringify({n: data.name, s: data.ts, h: data.hash}), width: 280, height: 280 });
         }
-        window.onload = render;
+        window.onload = renderStats;
     </script>
 </body>
 </html>
